@@ -113,29 +113,46 @@ class AnomalyDetector:
         plt.title('Distribution of Reconstruction Errors')
         plt.xlabel('Reconstruction Error (MAE)')
         plt.ylabel('Density')
-        plt.show()
+        plt.show(block=False) # Make plots non-blocking in some environments
         print("Reconstruction error visualization displayed.")
 
+    def _calculate_mean_std_dev_threshold(self, validation_errors: np.ndarray, n_std_devs: float) -> float:
+        """Calculates threshold as mean + n_std_devs * std_dev of validation errors."""
+        mean_error = np.mean(validation_errors)
+        std_dev_error = np.std(validation_errors)
+        return mean_error + n_std_devs * std_dev_error
+
+    def _calculate_iqr_threshold(self, validation_errors: np.ndarray, iqr_multiplier: float = 1.5) -> float:
+        """Calculates threshold using IQR method: Q3 + multiplier * IQR."""
+        q1 = np.percentile(validation_errors, 25)
+        q3 = np.percentile(validation_errors, 75)
+        iqr = q3 - q1
+        return q3 + iqr_multiplier * iqr
 
     def find_anomalies(self, new_data_df: pd.DataFrame, 
+                       strategy: str = 'percentile', 
                        error_threshold: float = None, 
-                       threshold_percentile: float = None, 
-                       validation_data_for_threshold: pd.DataFrame = None) -> pd.DataFrame:
+                       threshold_percentile: float = 0.95, 
+                       validation_data_for_threshold: pd.DataFrame = None,
+                       n_std_devs: float = 3.0,
+                       iqr_multiplier: float = 1.5) -> pd.DataFrame:
         """
-        Identifies anomalies in new_data_df based on reconstruction error.
-        The error threshold can be provided directly or calculated from validation data.
+        Identifies anomalies in new_data_df based on reconstruction error and chosen strategy.
 
         Args:
             new_data_df (pd.DataFrame): New input DataFrame to check for anomalies.
-            error_threshold (float, optional): Directly specified threshold. If None,
-                                               threshold_percentile and validation_data_for_threshold
-                                               must be provided.
-            threshold_percentile (float, optional): Percentile (e.g., 0.95 for 95th) to use on
-                                                    validation_data_for_threshold errors to set the threshold.
-                                                    Range: 0.0 to 1.0. Ignored if error_threshold is set.
-            validation_data_for_threshold (pd.DataFrame, optional): DataFrame of 'normal' data used to
-                                                                    calculate the error_threshold if not
-                                                                    directly provided. Ignored if error_threshold is set.
+            strategy (str, optional): Method to determine the error threshold.
+                                      Options: 'fixed', 'percentile', 'mean_std_dev', 'iqr'.
+                                      Defaults to 'percentile'.
+            error_threshold (float, optional): Directly specified threshold. Used if strategy is 'fixed'.
+            threshold_percentile (float, optional): Percentile (0.0 to 1.0) for 'percentile' strategy.
+                                                    Defaults to 0.95.
+            validation_data_for_threshold (pd.DataFrame, optional): DataFrame of 'normal' data for
+                                                                    dynamic threshold calculation ('percentile', 
+                                                                    'mean_std_dev', 'iqr' strategies).
+            n_std_devs (float, optional): Number of standard deviations for 'mean_std_dev' strategy.
+                                          Defaults to 3.0.
+            iqr_multiplier (float, optional): Multiplier for IQR for 'iqr' strategy. Defaults to 1.5.
 
         Returns:
             pd.DataFrame: A sub-DataFrame of new_data_df containing the rows
@@ -145,40 +162,53 @@ class AnomalyDetector:
                           if not enough data to form sequences.
         
         Raises:
-            ValueError: If error_threshold is None and either threshold_percentile or
-                        validation_data_for_threshold is also None.
-                        Or if validation_data_for_threshold yields no errors.
-                        Or if threshold_percentile is not between 0.0 and 1.0.
+            ValueError: If parameters are insufficient for the chosen strategy, or if validation data
+                        yields no errors for dynamic thresholding, or if strategy is unknown,
+                        or if threshold_percentile is out of range.
         """
-        calculated_threshold = None
-        if error_threshold is None:
-            if threshold_percentile is None or validation_data_for_threshold is None:
-                raise ValueError("If error_threshold is not provided, both threshold_percentile "
-                                 "and validation_data_for_threshold must be provided.")
-            if not (0.0 <= threshold_percentile <= 1.0):
-                raise ValueError("threshold_percentile must be between 0.0 and 1.0.")
+        actual_error_threshold: float
+
+        if strategy == 'fixed':
+            if error_threshold is None:
+                raise ValueError("For 'fixed' strategy, 'error_threshold' must be provided.")
+            actual_error_threshold = error_threshold
+            print(f"Using fixed error threshold: {actual_error_threshold:.4f}")
+        elif strategy in ['percentile', 'mean_std_dev', 'iqr']:
+            if validation_data_for_threshold is None:
+                raise ValueError(f"For '{strategy}' strategy, 'validation_data_for_threshold' must be provided.")
             
-            print(f"Calculating dynamic error threshold using {threshold_percentile*100:.1f}th percentile of validation data errors...")
+            print(f"Calculating dynamic error threshold using '{strategy}' strategy...")
             validation_errors = self.predict_reconstruction_error(validation_data_for_threshold)
             if validation_errors.size == 0:
-                raise ValueError("Could not determine threshold: validation_data_for_threshold "
-                                 "yielded no reconstruction errors (it might be too short).")
-            
-            calculated_threshold = np.percentile(validation_errors, threshold_percentile * 100)
-            print(f"Determined error threshold: {calculated_threshold:.4f}")
-        else:
-            calculated_threshold = error_threshold
-            print(f"Using provided error threshold: {calculated_threshold:.4f}")
+                raise ValueError(f"Could not determine threshold with '{strategy}': "
+                                 "validation_data_for_threshold yielded no reconstruction errors (it might be too short).")
 
+            if strategy == 'percentile':
+                if threshold_percentile is None: # Default is 0.95, so this check is for explicit None
+                     raise ValueError("For 'percentile' strategy, 'threshold_percentile' must be provided.")
+                if not (0.0 <= threshold_percentile <= 1.0):
+                    raise ValueError("threshold_percentile must be between 0.0 and 1.0.")
+                actual_error_threshold = np.percentile(validation_errors, threshold_percentile * 100)
+            elif strategy == 'mean_std_dev':
+                 if n_std_devs is None: 
+                    raise ValueError("For 'mean_std_dev' strategy, 'n_std_devs' must be provided.")
+                actual_error_threshold = self._calculate_mean_std_dev_threshold(validation_errors, n_std_devs)
+            elif strategy == 'iqr': # 'iqr'
+                if iqr_multiplier is None:
+                    raise ValueError("For 'iqr' strategy, 'iqr_multiplier' must be provided.")
+                actual_error_threshold = self._calculate_iqr_threshold(validation_errors, iqr_multiplier)
+            
+            print(f"Determined error threshold via {strategy}: {actual_error_threshold:.4f}")
+        else:
+            raise ValueError(f"Unknown strategy: {strategy}. Options are 'fixed', 'percentile', 'mean_std_dev', 'iqr'.")
 
         reconstruction_errors = self.predict_reconstruction_error(new_data_df)
 
-        # Define columns for the empty DataFrame, including the reconstruction error
         output_columns = list(new_data_df.columns) + ['reconstruction_error']
         if reconstruction_errors.size == 0:
             return pd.DataFrame(columns=output_columns)
 
-        anomalous_sequence_indices = np.where(reconstruction_errors > calculated_threshold)[0]
+        anomalous_sequence_indices = np.where(reconstruction_errors > actual_error_threshold)[0]
         
         if anomalous_sequence_indices.size > 0:
             anomalous_df = new_data_df.iloc[anomalous_sequence_indices].copy()
@@ -196,7 +226,7 @@ def plot_anomalies(original_df: pd.DataFrame, anomalous_df: pd.DataFrame, featur
         original_df (pd.DataFrame): The original DataFrame with time series data.
                                      Must have a usable index for plotting (e.g., numeric or datetime).
         anomalous_df (pd.DataFrame): DataFrame containing anomalous data points (output of find_anomalies).
-                                     Must have an index compatible with original_df and contain feature_to_plot.
+                                     Must have an index compatible with original_df.
         feature_to_plot (str): The name of the column in original_df to plot.
     
     Raises:
@@ -206,23 +236,19 @@ def plot_anomalies(original_df: pd.DataFrame, anomalous_df: pd.DataFrame, featur
         raise ValueError(f"Feature '{feature_to_plot}' not found in original_df columns.")
 
     plt.figure(figsize=(12, 6))
-    plt.plot(original_df.index, original_df[feature_to_plot], label=f'Normal {feature_to_plot}', zorder=1)
+    plt.plot(original_df.index, original_df[feature_to_plot], label=f'Sensor: {feature_to_plot}', zorder=1)
     
     if not anomalous_df.empty:
-        if feature_to_plot not in anomalous_df.columns:
-             print(f"Warning: Feature '{feature_to_plot}' not in anomalous_df. Anomalies will be marked based on original_df values at anomalous indices.")
-             # Check if indices from anomalous_df are present in original_df
-             valid_anomalous_indices = anomalous_df.index[anomalous_df.index.isin(original_df.index)]
-             if not valid_anomalous_indices.empty:
-                 plt.scatter(valid_anomalous_indices, original_df.loc[valid_anomalous_indices, feature_to_plot], 
-                             color='red', label='Anomaly', marker='o', s=50, zorder=2)
-             else:
-                 print("Warning: No valid anomalous indices found in original_df to plot.")
-        else: # feature_to_plot is in anomalous_df (preferred)
-             plt.scatter(anomalous_df.index, anomalous_df[feature_to_plot], 
-                        color='red', label='Anomaly', marker='o', s=50, zorder=2)
+        # Use original_df to plot the y-values for anomalies, ensuring they align with the main plot's scale and data source
+        # anomalous_df.index contains the correct indices from original_df where anomalies start
+        valid_anomalous_indices = anomalous_df.index[anomalous_df.index.isin(original_df.index)]
+        if not valid_anomalous_indices.empty:
+            plt.scatter(valid_anomalous_indices, original_df.loc[valid_anomalous_indices, feature_to_plot], 
+                        color='red', label='Anomaly Start', marker='o', s=50, zorder=2)
+        else:
+            print(f"Warning: Anomalous indices from anomalous_df not found in original_df for feature '{feature_to_plot}'.")
     else:
-        print("No anomalies to plot.")
+        print(f"No anomalies to plot for feature '{feature_to_plot}'.")
 
 
     plt.title(f'Anomaly Detection in {feature_to_plot}')
@@ -230,8 +256,8 @@ def plot_anomalies(original_df: pd.DataFrame, anomalous_df: pd.DataFrame, featur
     plt.ylabel(f'{feature_to_plot} Value')
     plt.legend()
     plt.grid(True)
-    plt.tight_layout() # Adjust layout to prevent labels from overlapping
-    plt.show()
+    plt.tight_layout() 
+    plt.show(block=False)
     print(f"Anomaly plot for '{feature_to_plot}' displayed.")
 
 
@@ -290,7 +316,7 @@ if __name__ == '__main__':
         validation_df = pd.DataFrame({
             'timestamp': pd.to_datetime(pd.date_range(start='2023-01-01', periods=val_split_idx, freq='T')),
             'sensor1': s1_val, 'sensor2': s2_val, 'sensor3': s3_val
-        }).set_index('timestamp') # Use timestamp as index for plotting
+        }).set_index('timestamp') 
 
         s1_new = np.random.uniform(10, 32, size=(total_rows - val_split_idx))
         s2_new = np.random.uniform(14, 26, size=(total_rows - val_split_idx))
@@ -298,49 +324,76 @@ if __name__ == '__main__':
         sample_new_data_main = pd.DataFrame({
             'timestamp': pd.to_datetime(pd.date_range(start=validation_df.index[-1] + pd.Timedelta(minutes=1), periods=(total_rows - val_split_idx), freq='T')),
             'sensor1': s1_new, 'sensor2': s2_new, 'sensor3': s3_new,
-        }).set_index('timestamp') # Use timestamp as index
+        }).set_index('timestamp') 
 
-        anomaly_start_time = sample_new_data_main.index[10]
-        anomaly_end_time = sample_new_data_main.index[12]
-        sample_new_data_main.loc[anomaly_start_time:anomaly_end_time, ['sensor1', 'sensor2']] = 150.0 
+        anomaly_start_time_idx = 10
+        if anomaly_start_time_idx < len(sample_new_data_main) - 2:
+            anomaly_start_time = sample_new_data_main.index[anomaly_start_time_idx]
+            anomaly_end_time = sample_new_data_main.index[anomaly_start_time_idx + 2]
+            sample_new_data_main.loc[anomaly_start_time:anomaly_end_time, ['sensor1', 'sensor2']] = 150.0 
         
         print("\nVisualizing reconstruction errors on validation data (assumed normal)...")
         detector.visualize_reconstruction_error(validation_df)
 
-        percentile_to_use = 0.95
-        print(f"\nFinding anomalies using {percentile_to_use*100:.0f}th percentile threshold from validation data...")
-        anomalous_data_percentile = detector.find_anomalies(
-            sample_new_data_main, 
-            threshold_percentile=percentile_to_use,
-            validation_data_for_threshold=validation_df
-        )
-        print(f"Anomalous data points (percentile-based threshold):")
-        if not anomalous_data_percentile.empty:
-            print(anomalous_data_percentile)
-        else:
-            print("No anomalies found with percentile-based threshold.")
-            
-        fixed_threshold = 0.05 
-        print(f"\nFinding anomalies using fixed threshold: {fixed_threshold}...")
+        # Strategy: 'fixed'
+        fixed_threshold_example = 0.08 
+        print(f"\nFinding anomalies using 'fixed' strategy (threshold: {fixed_threshold_example})...")
         anomalous_data_fixed = detector.find_anomalies(
-            sample_new_data_main, 
-            error_threshold=fixed_threshold
+            sample_new_data_main.copy(), # Pass copy to avoid modification issues if any
+            strategy='fixed',
+            error_threshold=fixed_threshold_example
         )
-        print(f"Anomalous data points (fixed threshold):")
+        print(f"Anomalous data points ('fixed' strategy):")
+        print(anomalous_data_fixed if not anomalous_data_fixed.empty else "No anomalies found.")
         if not anomalous_data_fixed.empty:
-            print(anomalous_data_fixed)
-        else:
-            print("No anomalies found with fixed threshold.")
-            
-        anomalies_to_plot_df = anomalous_data_percentile if not anomalous_data_percentile.empty else anomalous_data_fixed
-        
-        print("\nPlotting anomalies for 'sensor1' on new data...")
-        plot_anomalies(sample_new_data_main, anomalies_to_plot_df, 'sensor1')
-        
-        print("\nPlotting anomalies for 'sensor2' on new data...")
-        plot_anomalies(sample_new_data_main, anomalies_to_plot_df, 'sensor2')
+            plot_anomalies(sample_new_data_main, anomalous_data_fixed, 'sensor1')
+
+
+        # Strategy: 'percentile'
+        percentile_to_use_example = 0.95
+        print(f"\nFinding anomalies using 'percentile' strategy ({percentile_to_use_example*100:.0f}th percentile)...")
+        anomalous_data_percentile = detector.find_anomalies(
+            sample_new_data_main.copy(), 
+            strategy='percentile',
+            threshold_percentile=percentile_to_use_example,
+            validation_data_for_threshold=validation_df.copy()
+        )
+        print(f"Anomalous data points ('percentile' strategy):")
+        print(anomalous_data_percentile if not anomalous_data_percentile.empty else "No anomalies found.")
+        if not anomalous_data_percentile.empty:
+             plot_anomalies(sample_new_data_main, anomalous_data_percentile, 'sensor1')
+
+
+        # Strategy: 'mean_std_dev'
+        n_std_devs_to_use_example = 2.0 # Adjusted for potentially noisy dummy data
+        print(f"\nFinding anomalies using 'mean_std_dev' strategy ({n_std_devs_to_use_example} std devs)...")
+        anomalous_data_std = detector.find_anomalies(
+            sample_new_data_main.copy(),
+            strategy='mean_std_dev',
+            n_std_devs=n_std_devs_to_use_example,
+            validation_data_for_threshold=validation_df.copy()
+        )
+        print(f"Anomalous data points ('mean_std_dev' strategy):")
+        print(anomalous_data_std if not anomalous_data_std.empty else "No anomalies found.")
+        if not anomalous_data_std.empty:
+            plot_anomalies(sample_new_data_main, anomalous_data_std, 'sensor1')
+
+        # Strategy: 'iqr'
+        iqr_multiplier_to_use_example = 1.0 # Adjusted for potentially noisy dummy data
+        print(f"\nFinding anomalies using 'iqr' strategy (multiplier: {iqr_multiplier_to_use_example})...")
+        anomalous_data_iqr = detector.find_anomalies(
+            sample_new_data_main.copy(),
+            strategy='iqr',
+            iqr_multiplier=iqr_multiplier_to_use_example,
+            validation_data_for_threshold=validation_df.copy()
+        )
+        print(f"Anomalous data points ('iqr' strategy):")
+        print(anomalous_data_iqr if not anomalous_data_iqr.empty else "No anomalies found.")
+        if not anomalous_data_iqr.empty:
+            plot_anomalies(sample_new_data_main, anomalous_data_iqr, 'sensor1')
 
         print("--- AnomalyDetector Enhanced Example Usage Completed ---")
+        plt.close('all') # Close all matplotlib figures
 
     except Exception as e_main:
         print(f"An error occurred during the AnomalyDetector example: {e_main}")
