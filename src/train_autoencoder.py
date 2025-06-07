@@ -22,7 +22,7 @@ LSTM_DECODER_UNITS = [32, 64]
 DENSE_ACTIVATION = 'sigmoid' # Sigmoid for output scaled to [0,1] by MinMaxScaler
 
 EPOCHS = 10 # For dummy data, a small number is fine
-BATCH_SIZE = 8 
+BATCH_SIZE = 8
 VALIDATION_SPLIT = 0.1 # Use 10% of training data for validation
 
 def train_model():
@@ -62,7 +62,7 @@ def train_model():
 
     # --- Initialize and Use Preprocessor ---
     preprocessor = TimeSeriesPreprocessor(window_size=WINDOW_SIZE, feature_cols=FEATURE_COLS)
-    
+
     try:
         df_scaled = preprocessor.fit_transform_scale(df_normal)
         print("Data scaled successfully.")
@@ -79,7 +79,7 @@ def train_model():
 
     # --- Build Model ---
     input_shape = X_train.shape[1:] # (WINDOW_SIZE, n_features)
-    
+
     autoencoder = build_lstm_autoencoder(
         input_shape=input_shape,
         lstm_units_encoder=LSTM_ENCODER_UNITS,
@@ -92,7 +92,7 @@ def train_model():
     # --- Train Model ---
     print("Starting model training...")
     history = autoencoder.fit(
-        X_train, 
+        X_train,
         X_train, # Autoencoder learns to reconstruct its input
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
@@ -126,5 +126,5 @@ if __name__ == '__main__':
     # Set random seeds for reproducibility (optional, but good for consistent results)
     tf.random.set_seed(42)
     np.random.seed(42)
-    
+
     train_model()

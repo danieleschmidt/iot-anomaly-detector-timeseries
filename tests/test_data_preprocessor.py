@@ -17,24 +17,24 @@ class TestCreateSequences(unittest.TestCase):
         # in isolation or as it would behave if fit_transform_scale was not called prior,
         # thus relying on self.feature_cols.
         preprocessor = TimeSeriesPreprocessor(window_size=window_size, feature_cols=feature_cols)
-        
+
         data = {
             'feature1': [10, 20, 30, 40, 50],
             'feature2': [1, 2, 3, 4, 5],
             'other_col': [100, 200, 300, 400, 500] # Should be ignored
         }
         df = pd.DataFrame(data)
-        
+
         sequences = preprocessor.create_sequences(df)
-        
+
         # Expected: (len(df) - window_size + 1, window_size, len(feature_cols))
         # (5 - 3 + 1, 3, 2) = (3, 3, 2)
         self.assertEqual(sequences.shape, (3, window_size, len(feature_cols)))
-        
+
         # Verify content of the first sequence
         expected_first_seq_data = df[feature_cols].iloc[0:window_size].values
         np.testing.assert_array_equal(sequences[0], expected_first_seq_data)
-        
+
         # Verify content of the last sequence
         expected_last_seq_data = df[feature_cols].iloc[2:2+window_size].values
         np.testing.assert_array_equal(sequences[-1], expected_last_seq_data)
@@ -44,12 +44,12 @@ class TestCreateSequences(unittest.TestCase):
         feature_cols = ['a', 'b']
         window_size = 5
         preprocessor = TimeSeriesPreprocessor(window_size=window_size, feature_cols=feature_cols)
-        
+
         data = {'a': [1, 2, 3], 'b': [10, 20, 30]} # Length 3
         df_short = pd.DataFrame(data)
-        
+
         sequences = preprocessor.create_sequences(df_short)
-        
+
         # Expect an empty array with shape (0, window_size, num_features)
         self.assertEqual(sequences.shape, (0, window_size, len(feature_cols)))
         self.assertEqual(sequences.size, 0)
@@ -59,11 +59,11 @@ class TestCreateSequences(unittest.TestCase):
         feature_cols = ['col1', 'col2']
         window_size = 3
         preprocessor = TimeSeriesPreprocessor(window_size=window_size, feature_cols=feature_cols)
-        
+
         empty_df = pd.DataFrame(columns=feature_cols)
-        
+
         sequences = preprocessor.create_sequences(empty_df)
-        
+
         self.assertEqual(sequences.shape, (0, window_size, len(feature_cols)))
         self.assertEqual(sequences.size, 0)
 
@@ -72,11 +72,11 @@ class TestCreateSequences(unittest.TestCase):
         feature_cols = ['feature1', 'feature2']
         window_size = 3
         preprocessor = TimeSeriesPreprocessor(window_size=window_size, feature_cols=feature_cols)
-        
+
         # DataFrame missing 'feature2'
         data_missing_col = {'feature1': [1, 2, 3, 4, 5]}
         df_missing_col = pd.DataFrame(data_missing_col)
-        
+
         with self.assertRaisesRegex(ValueError, "DataFrame for create_sequences is missing columns: feature2"):
             preprocessor.create_sequences(df_missing_col)
 
@@ -93,7 +93,7 @@ class TestCreateSequences(unittest.TestCase):
         data = {
             'f1': [10, 20, 30],
             'f2': [1, 2, 3],
-            'f3_ignored': [100, 200, 300] 
+            'f3_ignored': [100, 200, 300]
         }
         df_for_sequencing = pd.DataFrame(data)
 
@@ -109,7 +109,7 @@ class TestCreateSequences(unittest.TestCase):
         # Verify that only 'f1' and 'f2' were used for sequences
         expected_first_seq_f1_f2 = df_for_sequencing[init_feature_cols].iloc[0:window_size].values
         np.testing.assert_array_equal(sequences[0], expected_first_seq_f1_f2)
-        
+
         # Further check: if preprocessor was instantiated with different feature_cols than present,
         # it should raise error if those are not in the DF passed to create_sequences.
         preprocessor_expects_other_cols = TimeSeriesPreprocessor(window_size=2, feature_cols=['x', 'y'])
