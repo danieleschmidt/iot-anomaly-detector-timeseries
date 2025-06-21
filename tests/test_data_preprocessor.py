@@ -38,3 +38,17 @@ def test_standard_scaler(tmp_path):
     flat = windows.reshape(-1, windows.shape[-1])
     assert np.allclose(flat.mean(axis=0), 0, atol=1e-6)
     assert np.allclose(flat.std(axis=0), 1, atol=1e-6)
+
+
+def test_save_and_load_scaler(tmp_path):
+    df = pd.DataFrame({"a": np.arange(10), "b": np.arange(10, 20)})
+    csv = tmp_path / "data.csv"
+    df.to_csv(csv, index=False)
+    dp = DataPreprocessor()
+    dp.load_and_preprocess(str(csv), window_size=2, step=1)
+    scaler_file = tmp_path / "scaler.pkl"
+    dp.save(scaler_file)
+    assert scaler_file.is_file()
+    dp2 = DataPreprocessor.load(scaler_file)
+    transformed = dp2.transform(df)
+    assert transformed.shape == (10, 2)

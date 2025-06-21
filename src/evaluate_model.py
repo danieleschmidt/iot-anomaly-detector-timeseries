@@ -13,9 +13,12 @@ from . import train_autoencoder
 def evaluate(
     csv_path: str = "data/raw/sensor_data.csv",
     window_size: int = 30,
+    step: int = 1,
     threshold_factor: float = 3.0,
+    labels_path: str | None = None,
     output_path: str | None = None,
     model_path: str = "saved_models/autoencoder.h5",
+    scaler_path: str | None = None,
     train_epochs: int = 1,
 ) -> dict[str, float]:
     """Evaluate model reconstruction error statistics.
@@ -26,13 +29,19 @@ def evaluate(
         Path to the CSV containing sensor data.
     window_size : int
         Length of each sliding window.
+    step : int, optional
+        Step size for the sliding window.
     threshold_factor : float, optional
         Factor for the standard deviation when computing the anomaly threshold.
     output_path : str or None, optional
         If given, write a JSON report with the evaluation statistics.
+    labels_path : str or None, optional
+        CSV file containing ground truth anomaly flags for each time step.
     model_path : str, optional
         Path to a trained autoencoder. If it does not exist it will be trained
         on ``csv_path`` with ``train_epochs`` epochs.
+    scaler_path : str or None, optional
+        Location of a fitted scaler used during training.
     train_epochs : int, optional
         Number of epochs used for fallback training when the model is missing.
     """
@@ -43,11 +52,15 @@ def evaluate(
             csv_path=csv_path,
             epochs=train_epochs,
             window_size=window_size,
+            step=step,
             model_path=model_path,
+            scaler_path=scaler_path,
         )
 
-    detector = AnomalyDetector(model_path)
-    windows = detector.preprocessor.load_and_preprocess(csv_path, window_size)
+    detector = AnomalyDetector(model_path, scaler_path)
+    windows = detector.preprocessor.load_and_preprocess(
+        csv_path, window_size, step
+    )
     scores = detector.score(windows)
     mse_mean = float(scores.mean())
     mse_std = float(scores.std())
@@ -60,6 +73,27 @@ def evaluate(
         "threshold": threshold,
         "percent_anomaly": percent_anomaly,
     }
+
+    if labels_path:
+        import pandas as pd
+        from sklearn.metrics import precision_recall_fscore_support
+
+        true_labels = pd.read_csv(labels_path, header=None)[0].to_numpy()
+        window_labels = []
+        for start in range(0, len(true_labels) - window_size + 1, step):
+            window_labels.append(int(true_labels[start : start + window_size].any()))
+        window_labels = np.array(window_labels, dtype=bool)
+        preds = scores > threshold
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            window_labels, preds, average="binary", zero_division=0
+        )
+        stats.update(
+            {
+                "precision": float(precision),
+                "recall": float(recall),
+                "f1": float(f1),
+            }
+        )
 
     if output_path:
         Path(output_path).write_text(json.dumps(stats, indent=2))
@@ -76,12 +110,27 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate autoencoder")
     parser.add_argument("--csv-path", default="data/raw/sensor_data.csv")
     parser.add_argument("--window-size", type=int, default=30)
+    parser.add_argument(
+        "--step",
+        type=int,
+        default=1,
+        help="Step size for sliding windows",
+    )
     parser.add_argument("--threshold-factor", type=float, default=3.0)
     parser.add_argument("--output", help="Write JSON report to this path")
+    parser.add_argument(
+        "--labels-path",
+        help="CSV file with ground truth anomaly flags",
+    )
     parser.add_argument(
         "--model-path",
         default="saved_models/autoencoder.h5",
         help="Autoencoder model location",
+    )
+    parser.add_argument(
+        "--scaler-path",
+        default=None,
+        help="Path to the scaler used during training",
     )
     parser.add_argument(
         "--train-epochs",
@@ -94,8 +143,11 @@ if __name__ == "__main__":
     evaluate(
         csv_path=args.csv_path,
         window_size=args.window_size,
+        step=args.step,
         threshold_factor=args.threshold_factor,
         output_path=args.output,
+        labels_path=args.labels_path,
         model_path=args.model_path,
+        scaler_path=args.scaler_path,
         train_epochs=args.train_epochs,
     )

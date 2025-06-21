@@ -9,12 +9,14 @@ def test_predict_flags_anomalies(tmp_path):
         csv_path='data/raw/sensor_data.csv',
         epochs=1,
         window_size=10,
+        step=2,
         latent_dim=8,
         lstm_units=16,
         model_path=str(model),
+        scaler_path=str(tmp_path / "scaler.pkl"),
     )
-    detector = AnomalyDetector(str(model))
-    preds = detector.predict('data/raw/sensor_data.csv', window_size=10, threshold=0.5)
+    detector = AnomalyDetector(str(model), str(tmp_path / "scaler.pkl"))
+    preds = detector.predict('data/raw/sensor_data.csv', window_size=10, step=2, threshold=0.5)
     assert preds.dtype == bool
     assert len(preds) > 0
 
@@ -26,14 +28,18 @@ def test_cli_writes_predictions(tmp_path):
         csv_path='data/raw/sensor_data.csv',
         epochs=1,
         window_size=10,
+        step=2,
         latent_dim=8,
         lstm_units=16,
         model_path=str(model),
+        scaler_path=str(tmp_path / "scaler.pkl"),
     )
     main(
         csv_path='data/raw/sensor_data.csv',
         model_path=str(model),
+        scaler_path=str(tmp_path / "scaler.pkl"),
         window_size=10,
+        step=2,
         threshold=0.5,
         output_path=str(output),
     )
