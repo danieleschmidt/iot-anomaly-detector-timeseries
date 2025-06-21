@@ -40,3 +40,30 @@ iot-anomaly-detector-timeseries/
 
 ## How to Contribute (and test Jules)
 This project leverages Jules for building out the anomaly detection pipeline. Please create detailed issues for features and bug fixes.
+
+## Quickstart
+
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Generate example data:
+   ```bash
+   python -m src.generate_data
+   ```
+3. Train the autoencoder:
+   ```bash
+   python -m src.train_autoencoder --epochs 5 --window-size 30 --latent-dim 16 --scaler standard
+   ```
+4. Detect anomalies:
+   ```python
+   from src.anomaly_detector import AnomalyDetector
+   detector = AnomalyDetector('saved_models/autoencoder.h5')
+   anomalies = detector.predict('data/raw/sensor_data.csv')
+   print(anomalies)
+   ```
+5. Evaluate reconstruction error statistics:
+   ```bash
+   python -m src.evaluate_model --window-size 30 --threshold-factor 3 -\
+       --output eval.json
+   ```
