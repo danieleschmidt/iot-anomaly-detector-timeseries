@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from .anomaly_detector import AnomalyDetector
+from . import train_autoencoder
 
 
 def evaluate(
@@ -14,6 +15,8 @@ def evaluate(
     window_size: int = 30,
     threshold_factor: float = 3.0,
     output_path: str | None = None,
+    model_path: str = "saved_models/autoencoder.h5",
+    train_epochs: int = 1,
 ) -> dict[str, float]:
     """Evaluate model reconstruction error statistics.
 
@@ -27,9 +30,23 @@ def evaluate(
         Factor for the standard deviation when computing the anomaly threshold.
     output_path : str or None, optional
         If given, write a JSON report with the evaluation statistics.
+    model_path : str, optional
+        Path to a trained autoencoder. If it does not exist it will be trained
+        on ``csv_path`` with ``train_epochs`` epochs.
+    train_epochs : int, optional
+        Number of epochs used for fallback training when the model is missing.
     """
 
-    detector = AnomalyDetector()
+    model_file = Path(model_path)
+    if not model_file.exists():
+        train_autoencoder.main(
+            csv_path=csv_path,
+            epochs=train_epochs,
+            window_size=window_size,
+            model_path=model_path,
+        )
+
+    detector = AnomalyDetector(model_path)
     windows = detector.preprocessor.load_and_preprocess(csv_path, window_size)
     scores = detector.score(windows)
     mse_mean = float(scores.mean())
@@ -61,6 +78,17 @@ if __name__ == "__main__":
     parser.add_argument("--window-size", type=int, default=30)
     parser.add_argument("--threshold-factor", type=float, default=3.0)
     parser.add_argument("--output", help="Write JSON report to this path")
+    parser.add_argument(
+        "--model-path",
+        default="saved_models/autoencoder.h5",
+        help="Autoencoder model location",
+    )
+    parser.add_argument(
+        "--train-epochs",
+        type=int,
+        default=1,
+        help="Epochs for fallback training if the model is missing",
+    )
     args = parser.parse_args()
 
     evaluate(
@@ -68,4 +96,6 @@ if __name__ == "__main__":
         window_size=args.window_size,
         threshold_factor=args.threshold_factor,
         output_path=args.output,
+        model_path=args.model_path,
+        train_epochs=args.train_epochs,
     )

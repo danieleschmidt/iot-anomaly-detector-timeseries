@@ -12,7 +12,29 @@ def main(
     latent_dim: int = 16,
     lstm_units: int = 32,
     scaler: str | None = None,
+    model_path: str = "saved_models/autoencoder.h5",
 ):
+    """Train the LSTM autoencoder and write it to ``model_path``.
+
+    Parameters
+    ----------
+    csv_path : str
+        Sensor data CSV file used for training.
+    epochs : int, optional
+        Number of training epochs.
+    window_size : int, optional
+        Length of each sliding window of time steps.
+    latent_dim : int, optional
+        Size of the latent representation.
+    lstm_units : int, optional
+        Units for the LSTM layers.
+    scaler : str or None, optional
+        Scaling method to use. ``"standard"`` selects ``StandardScaler``; any
+        other value uses ``MinMaxScaler``.
+    model_path : str, optional
+        Destination path for saving the trained model. Parent directories are
+        created automatically.
+    """
     if scaler == "standard":
         from sklearn.preprocessing import StandardScaler
 
@@ -27,8 +49,9 @@ def main(
         lstm_units=lstm_units,
     )
     model.fit(windows, windows, epochs=epochs, batch_size=32, verbose=0)
-    Path("saved_models").mkdir(exist_ok=True)
-    model.save("saved_models/autoencoder.h5")
+    model_file = Path(model_path)
+    model_file.parent.mkdir(parents=True, exist_ok=True)
+    model.save(model_file)
 
 
 if __name__ == "__main__":
@@ -44,6 +67,11 @@ if __name__ == "__main__":
         default="minmax",
         help="Scaling method for preprocessing",
     )
+    parser.add_argument(
+        "--model-path",
+        default="saved_models/autoencoder.h5",
+        help="Where to store the trained autoencoder",
+    )
     args = parser.parse_args()
     main(
         csv_path=args.csv_path,
@@ -52,4 +80,5 @@ if __name__ == "__main__":
         latent_dim=args.latent_dim,
         lstm_units=args.lstm_units,
         scaler=args.scaler,
+        model_path=args.model_path,
     )
