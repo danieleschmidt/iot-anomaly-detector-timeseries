@@ -53,8 +53,14 @@ This project leverages Jules for building out the anomaly detection pipeline. Pl
    ```
 3. Train the autoencoder:
    ```bash
-   python -m src.train_autoencoder --epochs 5 --window-size 30 --latent-dim 16 --scaler standard
+   python -m src.train_autoencoder \
+       --epochs 5 \
+       --window-size 30 \
+       --latent-dim 16 \
+       --scaler standard \
+       --model-path saved_models/autoencoder.h5
    ```
+   The `--model-path` option controls where the trained model is written.
 4. Detect anomalies:
    ```python
    from src.anomaly_detector import AnomalyDetector
@@ -62,8 +68,21 @@ This project leverages Jules for building out the anomaly detection pipeline. Pl
    anomalies = detector.predict('data/raw/sensor_data.csv')
    print(anomalies)
    ```
+   You can also invoke anomaly detection from the command line:
+   ```bash
+   python -m src.anomaly_detector --model-path saved_models/autoencoder.h5 \
+       --csv-path data/raw/sensor_data.csv \
+       --output predictions.csv
+   ```
+   This writes a CSV file containing ``1`` for anomalous windows and ``0`` otherwise.
 5. Evaluate reconstruction error statistics:
    ```bash
-   python -m src.evaluate_model --window-size 30 --threshold-factor 3 -\
+   python -m src.evaluate_model \
+       --window-size 30 \
+       --threshold-factor 3 \
+       --model-path saved_models/autoencoder.h5 \
+       --train-epochs 1 \
        --output eval.json
    ```
+   If the model file does not exist, the script performs a training run before
+   evaluating. The number of epochs can be customized with ``--train-epochs``.
