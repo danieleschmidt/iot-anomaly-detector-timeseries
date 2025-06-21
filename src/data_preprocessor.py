@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+from pathlib import Path
+import joblib
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
@@ -13,6 +15,16 @@ class DataPreprocessor:
             Scaler used for normalization. Defaults to ``MinMaxScaler``.
         """
         self.scaler = scaler or MinMaxScaler()
+
+    def save(self, path: str) -> None:
+        """Persist the underlying scaler to ``path``."""
+        joblib.dump(self.scaler, Path(path))
+
+    @classmethod
+    def load(cls, path: str) -> "DataPreprocessor":
+        """Load a scaler from ``path`` and return a new ``DataPreprocessor``."""
+        scaler = joblib.load(Path(path))
+        return cls(scaler)
 
     def fit_transform(self, df: pd.DataFrame) -> np.ndarray:
         scaled = self.scaler.fit_transform(df)
