@@ -1,0 +1,30 @@
+{
+  "1": {
+    "task": "Create integration test covering data generation, training, and detection pipeline",
+    "acceptance": [
+      "Create integration test covering data generation, training, and detection pipeline implemented",
+      "All automated tests pass"
+    ]
+  },
+  "2": {
+    "task": "Validate detection accuracy using labeled anomaly data",
+    "acceptance": [
+      "Validate detection accuracy using labeled anomaly data implemented",
+      "All automated tests pass"
+    ]
+  },
+  "3": {
+    "task": "Ensure integration test runs via `pytest` and passes",
+    "acceptance": [
+      "Ensure integration test runs via `pytest` and passes implemented",
+      "All automated tests pass"
+    ]
+  },
+  "4": {
+    "task": "Document integration test usage in README",
+    "acceptance": [
+      "Document integration test usage in README implemented",
+      "All automated tests pass"
+    ]
+  }
+}

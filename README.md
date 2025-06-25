@@ -110,3 +110,12 @@ This project leverages Jules for building out the anomaly detection pipeline. Pl
        --anomalies predictions.csv --output plot.png
    ```
    This generates ``plot.png`` with red regions indicating detected anomalies.
+
+## Running Integration Tests
+
+Integration tests verify the full data generation, training, and detection pipeline. They are marked with the `integration` marker. Execute them separately with:
+
+```bash
+pytest -m integration
+```
+
