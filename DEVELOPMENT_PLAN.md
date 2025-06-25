@@ -4,8 +4,8 @@
 _No outstanding feature gaps from README_
 
 ## Phase 2: Testing & Hardening
-- [ ] Add integration tests covering the end-to-end pipeline
-- [ ] Run security (`bandit`) and style (`ruff`) scans and address findings
+- [x] Add integration tests covering the end-to-end pipeline
+- [x] Run security (`bandit`) and style (`ruff`) scans and address findings
 
 ## Completed Tasks
 - [x] Create the initial directory structure (data/, notebooks/, src/, tests/, saved_models/).
