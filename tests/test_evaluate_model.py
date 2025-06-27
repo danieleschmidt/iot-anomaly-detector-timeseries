@@ -1,4 +1,10 @@
 import json
+import pytest
+
+pytest.importorskip("numpy")
+pytest.importorskip("pandas")
+pytest.importorskip("tensorflow")
+
 from src.evaluate_model import evaluate
 
 def test_evaluate_returns_stats(tmp_path):

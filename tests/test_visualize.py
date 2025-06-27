@@ -1,3 +1,9 @@
+import pytest
+
+pytest.importorskip("numpy")
+pytest.importorskip("pandas")
+pytest.importorskip("matplotlib")
+
 from src.visualize import main, plot_sequences
 
 

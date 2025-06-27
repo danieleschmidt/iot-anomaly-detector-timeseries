@@ -1,3 +1,8 @@
+import pytest
+
+pytest.importorskip("numpy")
+pytest.importorskip("pandas")
+
 from src.generate_data import main, simulate_sensor_data
 import pandas as pd
 import numpy as np
