@@ -1,3 +1,8 @@
+import pytest
+
+pytest.importorskip("numpy")
+pytest.importorskip("pandas")
+
 import numpy as np
 import pandas as pd
 from src.data_preprocessor import DataPreprocessor

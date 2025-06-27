@@ -119,3 +119,25 @@ Integration tests verify the full data generation, training, and detection pipel
 pytest -m integration
 ```
 
+You can also run them via Make:
+
+```bash
+make integration
+```
+
+
+## Development Setup
+
+Install additional tooling for linting and security checks:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Run the full test suite including style and security scans via:
+
+```bash
+./scripts/test.sh
+# or simply
+make test
+```

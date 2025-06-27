@@ -1,4 +1,9 @@
 import pytest
+
+pytest.importorskip("numpy")
+pytest.importorskip("pandas")
+pytest.importorskip("tensorflow")
+
 from src.generate_data import main as gen_main
 from src.train_autoencoder import main as train_main
 from src.anomaly_detector import AnomalyDetector

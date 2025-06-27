@@ -1,3 +1,9 @@
+import pytest
+
+pytest.importorskip("numpy")
+pytest.importorskip("pandas")
+pytest.importorskip("tensorflow")
+
 from src.train_autoencoder import main
 
 

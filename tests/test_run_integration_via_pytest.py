@@ -1,6 +1,11 @@
 import subprocess
 import sys
 from pathlib import Path
+import pytest
+
+pytest.importorskip("numpy")
+pytest.importorskip("pandas")
+pytest.importorskip("tensorflow")
 
 
 ROOT = Path(__file__).resolve().parents[1]
