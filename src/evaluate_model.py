@@ -15,6 +15,7 @@ def evaluate(
     window_size: int = 30,
     step: int = 1,
     threshold_factor: float = 3.0,
+    quantile: float | None = None,
     labels_path: str | None = None,
     output_path: str | None = None,
     model_path: str = "saved_models/autoencoder.h5",
@@ -33,6 +34,10 @@ def evaluate(
         Step size for the sliding window.
     threshold_factor : float, optional
         Factor for the standard deviation when computing the anomaly threshold.
+        Ignored if ``quantile`` is provided.
+    quantile : float or None, optional
+        Derive the anomaly threshold from this quantile of the reconstruction
+        error distribution. Must be between 0 and 1 (exclusive).
     output_path : str or None, optional
         If given, write a JSON report with the evaluation statistics.
     labels_path : str or None, optional
@@ -64,7 +69,12 @@ def evaluate(
     scores = detector.score(windows)
     mse_mean = float(scores.mean())
     mse_std = float(scores.std())
-    threshold = mse_mean + threshold_factor * mse_std
+    if quantile is not None:
+        if not 0 < quantile < 1:
+            raise ValueError("quantile must be between 0 and 1 (exclusive)")
+        threshold = float(np.quantile(scores, quantile))
+    else:
+        threshold = mse_mean + threshold_factor * mse_std
     percent_anomaly = float((scores > threshold).mean() * 100)
 
     stats = {
@@ -116,7 +126,21 @@ if __name__ == "__main__":
         default=1,
         help="Step size for sliding windows",
     )
-    parser.add_argument("--threshold-factor", type=float, default=3.0)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--threshold-factor",
+        type=float,
+        default=3.0,
+        help="Factor for std when deriving threshold",
+    )
+    group.add_argument(
+        "--quantile",
+        type=float,
+        help=(
+            "Quantile of reconstruction error used for the threshold. "
+            "Must be between 0 and 1 (exclusive)."
+        ),
+    )
     parser.add_argument("--output", help="Write JSON report to this path")
     parser.add_argument(
         "--labels-path",
@@ -145,6 +169,7 @@ if __name__ == "__main__":
         window_size=args.window_size,
         step=args.step,
         threshold_factor=args.threshold_factor,
+        quantile=args.quantile,
         output_path=args.output,
         labels_path=args.labels_path,
         model_path=args.model_path,

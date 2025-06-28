@@ -82,13 +82,27 @@ This project leverages Jules for building out the anomaly detection pipeline. Pl
    ```
    You can also invoke anomaly detection from the command line:
    ```bash
-   python -m src.anomaly_detector --model-path saved_models/autoencoder.h5 \
-       --scaler-path saved_models/scaler.pkl \
-       --csv-path data/raw/sensor_data.csv \
-       --step 1 \
-       --output predictions.csv
-   ```
-   This writes a CSV file containing ``1`` for anomalous windows and ``0`` otherwise.
+  python -m src.anomaly_detector --model-path saved_models/autoencoder.h5 \
+      --scaler-path saved_models/scaler.pkl \
+      --csv-path data/raw/sensor_data.csv \
+      --step 1 \
+      --threshold 0.5 \
+      --output predictions.csv
+  ```
+  Or derive the threshold from a reconstruction error quantile instead:
+  ```bash
+  python -m src.anomaly_detector --model-path saved_models/autoencoder.h5 \
+      --scaler-path saved_models/scaler.pkl \
+      --csv-path data/raw/sensor_data.csv \
+      --step 1 \
+      --quantile 0.95 \
+      --output predictions.csv
+  ```
+  This writes a CSV file containing ``1`` for anomalous windows and ``0`` otherwise.
+  Supply either ``--threshold`` for a manual value or ``--quantile`` to derive
+  the threshold from the reconstruction error. These options are mutually
+ exclusive and ``--quantile`` must be between 0 and 1 (exclusive). Invalid
+ quantile values are rejected before the model is loaded.
 5. Evaluate reconstruction error statistics:
    ```bash
    python -m src.evaluate_model \
@@ -101,6 +115,20 @@ This project leverages Jules for building out the anomaly detection pipeline. Pl
        --train-epochs 1 \
        --output eval.json
    ```
+   Alternatively derive the threshold from a reconstruction error quantile:
+   ```bash
+   python -m src.evaluate_model \
+       --window-size 30 \
+       --step 1 \
+       --quantile 0.95 \
+       --model-path saved_models/autoencoder.h5 \
+       --scaler-path saved_models/scaler.pkl \
+       --labels-path data/raw/sensor_labels.csv \
+       --train-epochs 1 \
+       --output eval.json
+   ```
+   The ``--threshold-factor`` and ``--quantile`` options are mutually
+   exclusive. ``--quantile`` must be between 0 and 1 (exclusive).
    If the model file does not exist, the script performs a training run before
    evaluating. Providing ``--labels-path`` enables computing precision, recall
    and F1 score. The number of epochs can be customized with ``--train-epochs``.

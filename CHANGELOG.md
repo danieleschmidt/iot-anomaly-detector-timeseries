@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.3
+
+- Add quantile-based thresholding option to evaluation script
+- Document new CLI usage and mutually exclusive flags
+- Validate quantile bounds in `evaluate_model`
+
+## v0.0.2
+
+- Add quantile-based thresholding for anomaly detection and CLI
+- Clarify mutual exclusivity between `--threshold` and `--quantile`
+- Early validation of the `--quantile` argument in the CLI
+
 ## v0.0.1
 
 - Applying previous commit.
