@@ -26,6 +26,20 @@ def test_evaluate_returns_stats(tmp_path):
     assert saved == stats
 
 
+def test_evaluate_with_quantile(tmp_path):
+    csv = 'data/raw/sensor_data.csv'
+    model = tmp_path / 'model.h5'
+    stats = evaluate(
+        csv_path=csv,
+        window_size=30,
+        step=2,
+        quantile=0.9,
+        model_path=str(model),
+        scaler_path=str(tmp_path / 'scaler.pkl'),
+    )
+    assert "threshold" in stats
+
+
 def test_evaluate_trains_if_model_missing(tmp_path):
     csv = 'data/raw/sensor_data.csv'
     model = tmp_path / 'autoencoder.h5'
@@ -54,3 +68,17 @@ def test_evaluate_with_labels(tmp_path):
         train_epochs=1,
     )
     assert {"precision", "recall", "f1"}.issubset(stats)
+
+
+@pytest.mark.parametrize("bad_q", [1.1, 0.0, -0.3])
+def test_evaluate_invalid_quantile(tmp_path, bad_q):
+    csv = 'data/raw/sensor_data.csv'
+    model = tmp_path / 'bad.h5'
+    with pytest.raises(ValueError):
+        evaluate(
+            csv_path=csv,
+            step=2,
+            quantile=bad_q,
+            model_path=str(model),
+            scaler_path=str(tmp_path / 'scaler.pkl'),
+        )
