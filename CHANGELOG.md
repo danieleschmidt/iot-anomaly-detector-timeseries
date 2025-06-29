@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.4
+
+- Added MIT license and contributor guide
+- Introduced setup script and CI workflow
+- README documents new setup steps
+
 ## v0.0.3
 
 - Add quantile-based thresholding option to evaluation script
