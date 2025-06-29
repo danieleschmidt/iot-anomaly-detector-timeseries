@@ -156,10 +156,12 @@ make integration
 
 ## Development Setup
 
-Install additional tooling for linting and security checks:
+Install all runtime and development dependencies using the helper script:
 
 ```bash
-pip install -r requirements-dev.txt
+./scripts/setup.sh
+# or via Make
+make setup
 ```
 
 Run the full test suite including style and security scans via:
@@ -169,3 +171,7 @@ Run the full test suite including style and security scans via:
 # or simply
 make test
 ```
+
+## Continuous Integration
+
+Every push and pull request triggers our GitHub Actions workflow which installs dependencies, lints, runs security scans, and executes the test suite.

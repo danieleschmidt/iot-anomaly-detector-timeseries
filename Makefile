@@ -1,4 +1,4 @@
-.PHONY: test lint security integration
+.PHONY: test lint security integration setup
 
 lint:
 	ruff check .
@@ -8,8 +8,11 @@ security:
 
 # Run lint, security, and tests
 test:
-        ./scripts/test.sh
+	./scripts/test.sh
 
 # Run only integration tests
 integration:
-        pytest -m integration
+	pytest -m integration
+
+setup:
+	./scripts/setup.sh
