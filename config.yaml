@@ -1,0 +1,20 @@
+# IoT Anomaly Detector Configuration
+# This file contains default configuration values for the system
+
+# Data preprocessing parameters
+window_size: 30           # Size of sliding windows for time series data
+step: 1                   # Step size for sliding windows
+
+# Model architecture parameters  
+lstm_units: 32            # Number of LSTM units in encoder/decoder
+latent_dim: 16            # Size of the latent representation
+batch_size: 32            # Training batch size
+epochs: 100               # Number of training epochs
+
+# Anomaly detection parameters
+threshold_factor: 3.0     # Threshold factor for anomaly detection
+
+# Data generation parameters
+anomaly_start: 200        # Start index for injected anomalies
+anomaly_length: 20        # Length of injected anomaly window
+anomaly_magnitude: 3.0    # Magnitude of injected anomalies

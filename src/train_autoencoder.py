@@ -1,20 +1,23 @@
 from pathlib import Path
 import argparse
+import logging
 
 from .data_preprocessor import DataPreprocessor
 from .autoencoder_model import build_autoencoder
+from .config import get_config
 
 
 def main(
     csv_path: str = "data/raw/sensor_data.csv",
-    epochs: int = 3,
-    window_size: int = 30,
+    epochs: int | None = None,
+    window_size: int | None = None,
     step: int = 1,
-    latent_dim: int = 16,
-    lstm_units: int = 32,
+    latent_dim: int | None = None,
+    lstm_units: int | None = None,
     scaler: str | None = None,
     model_path: str = "saved_models/autoencoder.h5",
     scaler_path: str | None = None,
+    config_file: str | None = None,
 ):
     """Train the LSTM autoencoder and write it to ``model_path``.
 
@@ -23,15 +26,15 @@ def main(
     csv_path : str
         Sensor data CSV file used for training.
     epochs : int, optional
-        Number of training epochs.
+        Number of training epochs. Uses config default if None.
     window_size : int, optional
-        Length of each sliding window of time steps.
+        Length of each sliding window of time steps. Uses config default if None.
     step : int, optional
         Step size for the sliding window.
     latent_dim : int, optional
-        Size of the latent representation.
+        Size of the latent representation. Uses config default if None.
     lstm_units : int, optional
-        Units for the LSTM layers.
+        Units for the LSTM layers. Uses config default if None.
     scaler : str or None, optional
         Scaling method to use. ``"standard"`` selects ``StandardScaler``; any
         other value uses ``MinMaxScaler``.
@@ -40,10 +43,26 @@ def main(
         created automatically.
     scaler_path : str or None, optional
         If given, the fitted scaler is written to this file for reuse.
+    config_file : str or None, optional
+        Path to configuration file. If None, uses global config.
     """
+    # Load configuration
+    config = get_config()
+    if config_file:
+        from .config import reload_config
+        config = reload_config(config_file)
+    
+    # Use configuration values as defaults for None parameters
+    epochs = epochs if epochs is not None else config.EPOCHS
+    window_size = window_size if window_size is not None else config.WINDOW_SIZE
+    latent_dim = latent_dim if latent_dim is not None else config.LATENT_DIM
+    lstm_units = lstm_units if lstm_units is not None else config.LSTM_UNITS
+    
+    logging.info(f"Training with config: epochs={epochs}, window_size={window_size}, "
+                f"latent_dim={latent_dim}, lstm_units={lstm_units}")
+    
     if scaler == "standard":
         from sklearn.preprocessing import StandardScaler
-
         dp = DataPreprocessor(StandardScaler())
     else:
         dp = DataPreprocessor()
@@ -54,27 +73,33 @@ def main(
         latent_dim=latent_dim,
         lstm_units=lstm_units,
     )
-    model.fit(windows, windows, epochs=epochs, batch_size=32, verbose=0)
+    
+    batch_size = config.BATCH_SIZE
+    model.fit(windows, windows, epochs=epochs, batch_size=batch_size, verbose=1)
+    
     model_file = Path(model_path)
     model_file.parent.mkdir(parents=True, exist_ok=True)
     model.save(model_file)
+    logging.info(f"Model saved to {model_file}")
+    
     if scaler_path:
         dp.save(scaler_path)
+        logging.info(f"Scaler saved to {scaler_path}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train LSTM autoencoder")
     parser.add_argument("--csv-path", default="data/raw/sensor_data.csv")
-    parser.add_argument("--epochs", type=int, default=3)
-    parser.add_argument("--window-size", type=int, default=30)
+    parser.add_argument("--epochs", type=int, help="Number of training epochs (overrides config)")
+    parser.add_argument("--window-size", type=int, help="Window size (overrides config)")
     parser.add_argument(
         "--step",
         type=int,
         default=1,
         help="Step size for sliding windows",
     )
-    parser.add_argument("--latent-dim", type=int, default=16)
-    parser.add_argument("--lstm-units", type=int, default=32)
+    parser.add_argument("--latent-dim", type=int, help="Latent dimension (overrides config)")
+    parser.add_argument("--lstm-units", type=int, help="LSTM units (overrides config)")
     parser.add_argument(
         "--scaler",
         choices=["minmax", "standard"],
@@ -91,6 +116,10 @@ if __name__ == "__main__":
         default=None,
         help="Optional path to save the fitted scaler",
     )
+    parser.add_argument(
+        "--config-file",
+        help="Path to configuration file",
+    )
     args = parser.parse_args()
     main(
         csv_path=args.csv_path,
@@ -102,4 +131,5 @@ if __name__ == "__main__":
         scaler=args.scaler,
         model_path=args.model_path,
         scaler_path=args.scaler_path,
+        config_file=args.config_file,
     )

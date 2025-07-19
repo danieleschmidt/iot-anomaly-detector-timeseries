@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import argparse
+import logging
+
+from .config import get_config
 
 
 def simulate_sensor_data(
@@ -9,9 +12,9 @@ def simulate_sensor_data(
     num_features: int = 3,
     seed: int | None = None,
     return_labels: bool = False,
-    anomaly_start: int = 200,
-    anomaly_length: int = 20,
-    anomaly_magnitude: float = 3.0,
+    anomaly_start: int | None = None,
+    anomaly_length: int | None = None,
+    anomaly_magnitude: float | None = None,
 ) -> pd.DataFrame | tuple[pd.DataFrame, pd.Series]:
     """Simulate multivariate sensor data.
 
@@ -26,13 +29,18 @@ def simulate_sensor_data(
     return_labels : bool, optional
         If ``True``, also return a Series marking anomalous indices.
     anomaly_start : int, optional
-        Index of the first anomalous time step. If ``num_samples`` is less
-        than ``anomaly_start`` no anomalies are inserted.
+        Index of the first anomalous time step. Uses config default if None.
     anomaly_length : int, optional
-        How many time steps the anomaly spans.
+        How many time steps the anomaly spans. Uses config default if None.
     anomaly_magnitude : float, optional
-        Amount added to ``sensor_1`` during the anomaly window.
+        Amount added to ``sensor_1`` during the anomaly window. Uses config default if None.
     """
+    
+    # Load configuration defaults
+    config = get_config()
+    anomaly_start = anomaly_start if anomaly_start is not None else config.ANOMALY_START
+    anomaly_length = anomaly_length if anomaly_length is not None else config.ANOMALY_LENGTH
+    anomaly_magnitude = anomaly_magnitude if anomaly_magnitude is not None else config.ANOMALY_MAGNITUDE
 
     if seed is not None:
         np.random.seed(seed)
@@ -62,11 +70,17 @@ def main(
     seed: int | None = None,
     output_path: str = "data/raw/sensor_data.csv",
     labels_path: str | None = None,
-    anomaly_start: int = 200,
-    anomaly_length: int = 20,
-    anomaly_magnitude: float = 3.0,
+    anomaly_start: int | None = None,
+    anomaly_length: int | None = None,
+    anomaly_magnitude: float | None = None,
+    config_file: str | None = None,
 ) -> None:
     """Generate synthetic sensor data and write it to ``output_path``."""
+    
+    # Load configuration
+    if config_file:
+        from .config import reload_config
+        reload_config(config_file)
 
     df, labels = simulate_sensor_data(
         num_samples,
@@ -80,8 +94,11 @@ def main(
     out_file = Path(output_path)
     out_file.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(out_file, index=False)
+    logging.info(f"Generated {num_samples} samples with {num_features} features, saved to {out_file}")
+    
     if labels_path:
         Path(labels_path).write_text("\n".join(map(str, labels.tolist())))
+        logging.info(f"Anomaly labels saved to {labels_path}")
 
 
 if __name__ == "__main__":
@@ -101,20 +118,21 @@ if __name__ == "__main__":
     parser.add_argument(
         "--anomaly-start",
         type=int,
-        default=200,
-        help="Index of the first anomalous time step",
+        help="Index of the first anomalous time step (overrides config)",
     )
     parser.add_argument(
         "--anomaly-length",
         type=int,
-        default=20,
-        help="Length of the injected anomaly",
+        help="Length of the injected anomaly (overrides config)",
     )
     parser.add_argument(
         "--anomaly-magnitude",
         type=float,
-        default=3.0,
-        help="Magnitude added to sensor_1 during the anomaly",
+        help="Magnitude added to sensor_1 during the anomaly (overrides config)",
+    )
+    parser.add_argument(
+        "--config-file",
+        help="Path to configuration file",
     )
     args = parser.parse_args()
     main(
@@ -126,4 +144,5 @@ if __name__ == "__main__":
         anomaly_start=args.anomaly_start,
         anomaly_length=args.anomaly_length,
         anomaly_magnitude=args.anomaly_magnitude,
+        config_file=args.config_file,
     )
