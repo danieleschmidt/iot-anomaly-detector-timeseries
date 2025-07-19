@@ -7,6 +7,7 @@ import pandas as pd
 from tensorflow.keras.models import load_model
 
 from .data_preprocessor import DataPreprocessor
+from .logging_config import get_logger
 
 
 class AnomalyDetector:
@@ -18,15 +19,33 @@ class AnomalyDetector:
         scaler_path: str | None = None,
     ) -> None:
         """Load a trained model from ``model_path`` and optional scaler."""
-        self.model = load_model(model_path)
+        self.logger = get_logger(__name__)
+        
+        try:
+            self.logger.info(f"Loading autoencoder model from {model_path}")
+            self.model = load_model(model_path)
+            self.logger.info(f"Model loaded successfully")
+        except Exception as e:
+            self.logger.error(f"Failed to load model from {model_path}: {e}")
+            raise ValueError(f"Unable to load model from {model_path}: {e}") from e
+        
         if scaler_path and Path(scaler_path).exists():
+            self.logger.info(f"Loading scaler from {scaler_path}")
             self.preprocessor = DataPreprocessor.load(scaler_path)
         else:
+            if scaler_path:
+                self.logger.warning(f"Scaler path {scaler_path} not found, using default MinMaxScaler")
+            else:
+                self.logger.info("No scaler path provided, using default MinMaxScaler")
             self.preprocessor = DataPreprocessor()
 
     def score(self, sequences: np.ndarray) -> np.ndarray:
+        """Compute reconstruction error scores for sequences."""
+        self.logger.debug(f"Computing reconstruction scores for {len(sequences)} sequences")
         reconstructed = self.model.predict(sequences, verbose=0)
-        return np.mean(np.square(sequences - reconstructed), axis=(1, 2))
+        scores = np.mean(np.square(sequences - reconstructed), axis=(1, 2))
+        self.logger.debug(f"Score statistics: mean={scores.mean():.4f}, std={scores.std():.4f}")
+        return scores
 
     def predict(
         self,
@@ -54,8 +73,10 @@ class AnomalyDetector:
             threshold. Must be between 0 and 1 (exclusive) and is mutually
             exclusive with ``threshold``.
         """
+        self.logger.info(f"Predicting anomalies for {csv_path}")
         windows = self.preprocessor.load_and_preprocess(csv_path, window_size, step)
         scores = self.score(windows)
+        
         if threshold is not None and quantile is not None:
             raise ValueError("Provide either threshold or quantile, not both")
 
@@ -66,9 +87,18 @@ class AnomalyDetector:
         if threshold is None:
             if quantile is not None:
                 threshold = float(np.quantile(scores, quantile))
+                self.logger.info(f"Using quantile-based threshold: {threshold:.4f} (quantile={quantile})")
             else:
                 threshold = scores.mean() + 3 * scores.std()
-        return scores > threshold
+                self.logger.info(f"Using statistical threshold: {threshold:.4f} (mean + 3*std)")
+        else:
+            self.logger.info(f"Using manual threshold: {threshold:.4f}")
+        
+        predictions = scores > threshold
+        anomaly_count = predictions.sum()
+        self.logger.info(f"Detected {anomaly_count} anomalous windows out of {len(predictions)} total")
+        
+        return predictions
 
 
 def main(
@@ -104,12 +134,16 @@ def main(
     output_path : str, optional
         Where to write the anomaly flags as a CSV file.
     """
+    logger = get_logger(__name__)
+    logger.info(f"Starting anomaly detection: input={csv_path}, output={output_path}")
+    
     detector = AnomalyDetector(model_path, scaler_path)
     if quantile is not None and not 0 < quantile < 1:
         raise ValueError("quantile must be between 0 and 1 (exclusive)")
 
     preds = detector.predict(csv_path, window_size, step, threshold, quantile)
     pd.Series(preds.astype(int)).to_csv(output_path, index=False, header=False)
+    logger.info(f"Anomaly predictions saved to {output_path}")
 
 
 if __name__ == "__main__":
