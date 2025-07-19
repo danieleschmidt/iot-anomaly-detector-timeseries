@@ -8,6 +8,7 @@ import numpy as np
 
 from .anomaly_detector import AnomalyDetector
 from . import train_autoencoder
+from .logging_config import get_logger
 
 
 def evaluate(
@@ -50,9 +51,11 @@ def evaluate(
     train_epochs : int, optional
         Number of epochs used for fallback training when the model is missing.
     """
-
+    logger = get_logger(__name__)
+    
     model_file = Path(model_path)
     if not model_file.exists():
+        logger.info(f"Model not found at {model_path}, training new model with {train_epochs} epochs")
         train_autoencoder.main(
             csv_path=csv_path,
             epochs=train_epochs,
@@ -62,19 +65,28 @@ def evaluate(
             scaler_path=scaler_path,
         )
 
+    logger.info(f"Loading model from {model_path}")
     detector = AnomalyDetector(model_path, scaler_path)
+    
+    logger.info(f"Processing data from {csv_path} with window_size={window_size}")
     windows = detector.preprocessor.load_and_preprocess(
         csv_path, window_size, step
     )
+    
+    logger.info(f"Computing reconstruction scores for {len(windows)} windows")
     scores = detector.score(windows)
     mse_mean = float(scores.mean())
     mse_std = float(scores.std())
+    
     if quantile is not None:
         if not 0 < quantile < 1:
             raise ValueError("quantile must be between 0 and 1 (exclusive)")
         threshold = float(np.quantile(scores, quantile))
+        logger.info(f"Using quantile-based threshold: {threshold:.4f} (quantile={quantile})")
     else:
         threshold = mse_mean + threshold_factor * mse_std
+        logger.info(f"Using statistical threshold: {threshold:.4f} (mean + {threshold_factor}*std)")
+    
     percent_anomaly = float((scores > threshold).mean() * 100)
 
     stats = {
@@ -88,6 +100,7 @@ def evaluate(
         import pandas as pd
         from sklearn.metrics import precision_recall_fscore_support
 
+        logger.info(f"Loading ground truth labels from {labels_path}")
         true_labels = pd.read_csv(labels_path, header=None)[0].to_numpy()
         window_labels = []
         for start in range(0, len(true_labels) - window_size + 1, step):
@@ -97,6 +110,8 @@ def evaluate(
         precision, recall, f1, _ = precision_recall_fscore_support(
             window_labels, preds, average="binary", zero_division=0
         )
+        
+        logger.info(f"Classification metrics: precision={precision:.3f}, recall={recall:.3f}, f1={f1:.3f}")
         stats.update(
             {
                 "precision": float(precision),
@@ -107,11 +122,15 @@ def evaluate(
 
     if output_path:
         Path(output_path).write_text(json.dumps(stats, indent=2))
+        logger.info(f"Evaluation results saved to {output_path}")
 
-    print(f"Average MSE: {mse_mean:.4f}")
-    print(f"Std MSE: {mse_std:.4f}")
-    print(f"Threshold: {threshold:.4f}")
-    print(f"Percent anomalies at threshold: {percent_anomaly:.2f}%")
+    # Log evaluation summary
+    logger.info("Evaluation Summary", extra={
+        "average_mse": round(mse_mean, 4),
+        "std_mse": round(mse_std, 4),
+        "threshold": round(threshold, 4),
+        "percent_anomalies": round(percent_anomaly, 2)
+    })
 
     return stats
 

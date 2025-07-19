@@ -57,3 +57,102 @@ def test_save_and_load_scaler(tmp_path):
     dp2 = DataPreprocessor.load(scaler_file)
     transformed = dp2.transform(df)
     assert transformed.shape == (10, 2)
+
+
+def test_load_nonexistent_csv():
+    """Test error handling for non-existent CSV file."""
+    dp = DataPreprocessor()
+    with pytest.raises(FileNotFoundError, match="CSV file not found"):
+        dp.load_and_preprocess("nonexistent.csv", window_size=3)
+
+
+def test_load_invalid_csv(tmp_path):
+    """Test error handling for invalid CSV content."""
+    invalid_csv = tmp_path / "invalid.csv"
+    invalid_csv.write_text("not,valid,csv\ncontent")
+    dp = DataPreprocessor()
+    with pytest.raises(ValueError, match="DataFrame contains missing values"):
+        dp.load_and_preprocess(str(invalid_csv), window_size=3)
+
+
+def test_load_malformed_csv(tmp_path):
+    """Test error handling for malformed CSV content."""
+    malformed_csv = tmp_path / "malformed.csv"
+    malformed_csv.write_text("\"unclosed quote field\na,b,c\n1,2,3")
+    dp = DataPreprocessor()
+    with pytest.raises(ValueError, match="Unable to parse CSV file"):
+        dp.load_and_preprocess(str(malformed_csv), window_size=3)
+
+
+def test_load_empty_csv(tmp_path):
+    """Test error handling for empty CSV file."""
+    empty_csv = tmp_path / "empty.csv"
+    empty_csv.write_text("")
+    dp = DataPreprocessor()
+    with pytest.raises(ValueError, match="CSV file is empty"):
+        dp.load_and_preprocess(str(empty_csv), window_size=3)
+
+
+def test_invalid_window_size():
+    """Test validation for window_size parameter."""
+    dp = DataPreprocessor()
+    data = np.arange(10).reshape(-1, 1)
+    
+    # Test negative window size
+    with pytest.raises(ValueError, match="window_size must be positive"):
+        dp.create_windows(data, window_size=-1)
+    
+    # Test zero window size
+    with pytest.raises(ValueError, match="window_size must be positive"):
+        dp.create_windows(data, window_size=0)
+    
+    # Test window size larger than data
+    with pytest.raises(ValueError, match="window_size cannot be larger than data length"):
+        dp.create_windows(data, window_size=15)
+
+
+def test_invalid_step_size():
+    """Test validation for step parameter."""
+    dp = DataPreprocessor()
+    data = np.arange(10).reshape(-1, 1)
+    
+    # Test negative step
+    with pytest.raises(ValueError, match="step must be positive"):
+        dp.create_windows(data, window_size=3, step=-1)
+    
+    # Test zero step
+    with pytest.raises(ValueError, match="step must be positive"):
+        dp.create_windows(data, window_size=3, step=0)
+
+
+def test_load_corrupted_scaler(tmp_path):
+    """Test error handling for corrupted scaler file."""
+    corrupted_file = tmp_path / "corrupted.pkl"
+    corrupted_file.write_text("not a valid pickle file")
+    
+    with pytest.raises(ValueError, match="Unable to load scaler"):
+        DataPreprocessor.load(str(corrupted_file))
+
+
+def test_load_nonexistent_scaler():
+    """Test error handling for non-existent scaler file."""
+    with pytest.raises(FileNotFoundError, match="Scaler file not found"):
+        DataPreprocessor.load("nonexistent.pkl")
+
+
+def test_empty_dataframe():
+    """Test handling of empty DataFrame."""
+    dp = DataPreprocessor()
+    empty_df = pd.DataFrame()
+    
+    with pytest.raises(ValueError, match="DataFrame is empty"):
+        dp.fit_transform(empty_df)
+
+
+def test_dataframe_with_missing_values():
+    """Test handling of DataFrame with NaN values."""
+    dp = DataPreprocessor()
+    df_with_nan = pd.DataFrame({"a": [1, 2, np.nan, 4], "b": [5, 6, 7, 8]})
+    
+    with pytest.raises(ValueError, match="DataFrame contains missing values"):
+        dp.fit_transform(df_with_nan)
