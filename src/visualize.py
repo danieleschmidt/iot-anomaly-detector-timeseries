@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-def plot_sequences(csv_path: str, anomalies: pd.Series = None, output='plot.png'):
+def plot_sequences(csv_path: str, anomalies: pd.Series = None, output: str = 'plot.png') -> None:
     df = pd.read_csv(csv_path)
     df.plot(subplots=True, figsize=(10, 8))
     if anomalies is not None:
