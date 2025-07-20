@@ -4,6 +4,12 @@ import logging
 
 from .data_preprocessor import DataPreprocessor
 from .autoencoder_model import build_autoencoder
+from .flexible_autoencoder import (
+    FlexibleAutoencoderBuilder,
+    create_autoencoder_from_config,
+    load_architecture_config,
+    get_predefined_architectures
+)
 from .config import get_config
 from .model_metadata import save_model_with_metadata
 from .training_callbacks import create_training_callbacks
@@ -22,6 +28,9 @@ def main(
     config_file: str | None = None,
     enable_progress: bool = True,
     enable_early_stopping: bool = True,
+    architecture_config: str | None = None,
+    architecture_name: str | None = None,
+    use_flexible_architecture: bool = False,
 ) -> str:
     """Train the LSTM autoencoder and write it to ``model_path``.
 
@@ -53,6 +62,12 @@ def main(
         Whether to enable detailed progress indication during training.
     enable_early_stopping : bool, optional
         Whether to enable early stopping based on loss improvement.
+    architecture_config : str, optional
+        Path to JSON file containing flexible architecture configuration.
+    architecture_name : str, optional
+        Name of predefined architecture to use.
+    use_flexible_architecture : bool, optional
+        Whether to use flexible architecture system instead of legacy autoencoder.
     """
     # Load configuration
     config = get_config()
@@ -76,11 +91,25 @@ def main(
         dp = DataPreprocessor()
 
     windows = dp.load_and_preprocess(csv_path, window_size=window_size, step=step)
-    model = build_autoencoder(
-        (windows.shape[1], windows.shape[2]),
-        latent_dim=latent_dim,
-        lstm_units=lstm_units,
-    )
+    
+    # Determine which architecture system to use
+    if use_flexible_architecture or architecture_config or architecture_name:
+        model = _build_flexible_model(
+            input_shape=(windows.shape[1], windows.shape[2]),
+            architecture_config=architecture_config,
+            architecture_name=architecture_name,
+            latent_dim=latent_dim,
+            lstm_units=lstm_units
+        )
+        model_type = "flexible"
+    else:
+        # Use legacy autoencoder
+        model = build_autoencoder(
+            (windows.shape[1], windows.shape[2]),
+            latent_dim=latent_dim,
+            lstm_units=lstm_units,
+        )
+        model_type = "legacy"
     
     batch_size = config.BATCH_SIZE
     
@@ -119,7 +148,11 @@ def main(
         "latent_dim": latent_dim,
         "lstm_units": lstm_units,
         "batch_size": batch_size,
-        "scaler_type": "standard" if scaler == "standard" else "minmax"
+        "scaler_type": "standard" if scaler == "standard" else "minmax",
+        "model_type": model_type,
+        "architecture_config": architecture_config,
+        "architecture_name": architecture_name,
+        "use_flexible_architecture": use_flexible_architecture
     }
     
     dataset_info = {
@@ -148,6 +181,81 @@ def main(
         logging.info(f"Scaler saved to {scaler_path}")
     
     return str(model_file)
+
+
+def _build_flexible_model(
+    input_shape: tuple[int, int],
+    architecture_config: str | None = None,
+    architecture_name: str | None = None,
+    latent_dim: int | None = None,
+    lstm_units: int | None = None
+):
+    """Build model using flexible architecture system.
+    
+    Parameters
+    ----------
+    input_shape : tuple[int, int]
+        Shape of input data (time_steps, features)
+    architecture_config : str, optional
+        Path to architecture configuration file
+    architecture_name : str, optional
+        Name of predefined architecture
+    latent_dim : int, optional
+        Override latent dimension
+    lstm_units : int, optional
+        Override LSTM units (for simple architectures)
+        
+    Returns
+    -------
+    Model
+        Built Keras model
+    """
+    logger = logging.getLogger(__name__)
+    
+    if architecture_config:
+        # Load from configuration file
+        config = load_architecture_config(architecture_config)
+        logger.info(f"Loaded architecture config from {architecture_config}")
+        
+        # Override input shape to match data
+        config['input_shape'] = list(input_shape)
+        
+        # Apply parameter overrides
+        if latent_dim is not None:
+            config['latent_config']['dim'] = latent_dim
+            
+        return create_autoencoder_from_config(config)
+        
+    elif architecture_name:
+        # Use predefined architecture
+        predefined = get_predefined_architectures()
+        if architecture_name not in predefined:
+            available = list(predefined.keys())
+            raise ValueError(f"Unknown architecture '{architecture_name}'. "
+                           f"Available: {available}")
+        
+        config = predefined[architecture_name].copy()
+        logger.info(f"Using predefined architecture: {architecture_name}")
+        
+        # Override input shape to match data
+        config['input_shape'] = list(input_shape)
+        
+        # Apply parameter overrides
+        if latent_dim is not None:
+            config['latent_config']['dim'] = latent_dim
+            
+        return create_autoencoder_from_config(config)
+        
+    else:
+        # Create simple flexible architecture equivalent to legacy
+        builder = FlexibleAutoencoderBuilder(input_shape)
+        builder.add_encoder_layer('lstm', units=lstm_units or 64, return_sequences=True)
+        builder.add_encoder_layer('lstm', units=(lstm_units or 64) // 2, return_sequences=False)
+        builder.set_latent_config(dim=latent_dim or 16)
+        builder.set_compilation(optimizer='adam', loss='mse')
+        
+        logger.info("Using simple flexible architecture (legacy equivalent)")
+        return builder.build()
 
 
 if __name__ == "__main__":
@@ -193,7 +301,32 @@ if __name__ == "__main__":
         action="store_true",
         help="Disable early stopping during training"
     )
+    parser.add_argument(
+        "--architecture-config",
+        help="Path to JSON file with flexible architecture configuration"
+    )
+    parser.add_argument(
+        "--architecture-name",
+        help="Name of predefined architecture (simple_lstm, deep_lstm, hybrid_conv_lstm, gru_based, lightweight)"
+    )
+    parser.add_argument(
+        "--use-flexible-architecture",
+        action="store_true",
+        help="Use flexible architecture system instead of legacy autoencoder"
+    )
+    parser.add_argument(
+        "--list-architectures",
+        action="store_true",
+        help="List available predefined architectures and exit"
+    )
     args = parser.parse_args()
+    
+    if args.list_architectures:
+        print("Available predefined architectures:")
+        for name, config in get_predefined_architectures().items():
+            print(f"  {name}: {config.get('description', 'No description')}")
+        return
+    
     main(
         csv_path=args.csv_path,
         epochs=args.epochs,
@@ -207,4 +340,7 @@ if __name__ == "__main__":
         config_file=args.config_file,
         enable_progress=not args.disable_progress,
         enable_early_stopping=not args.disable_early_stopping,
+        architecture_config=args.architecture_config,
+        architecture_name=args.architecture_name,
+        use_flexible_architecture=args.use_flexible_architecture,
     )
