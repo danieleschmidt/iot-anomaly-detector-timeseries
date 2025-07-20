@@ -325,7 +325,8 @@ if __name__ == "__main__":
         print("Available predefined architectures:")
         for name, config in get_predefined_architectures().items():
             print(f"  {name}: {config.get('description', 'No description')}")
-        return
+        import sys
+        sys.exit(0)
     
     main(
         csv_path=args.csv_path,
