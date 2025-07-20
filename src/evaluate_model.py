@@ -9,6 +9,7 @@ import numpy as np
 from .anomaly_detector import AnomalyDetector
 from . import train_autoencoder
 from .logging_config import get_logger
+from .model_metadata import ModelMetadata
 
 
 def evaluate(
@@ -155,6 +156,39 @@ def evaluate(
     if output_path:
         Path(output_path).write_text(json.dumps(stats, indent=2))
         logger.info(f"Evaluation results saved to {output_path}")
+    
+    # Update model metadata with evaluation results if labels were provided
+    if labels_path:
+        try:
+            metadata_manager = ModelMetadata(Path(model_path).parent)
+            model_versions = metadata_manager.list_model_versions()
+            
+            # Find the most recent version that matches our model file
+            model_name = Path(model_path).name
+            matching_version = None
+            for version_info in model_versions:
+                if version_info["model_file"] == model_name:
+                    matching_version = version_info["version"]
+                    break
+            
+            if matching_version:
+                # Load existing metadata and update with evaluation results
+                metadata_path = Path(model_path).parent / f"metadata_{matching_version}.json"
+                if metadata_path.exists():
+                    metadata = metadata_manager.load_metadata(str(metadata_path))
+                    
+                    # Update performance metrics with evaluation results
+                    evaluation_metrics = {
+                        f"eval_{k}": v for k, v in stats.items() 
+                        if k in ["precision", "recall", "f1", "roc_auc", "accuracy", "specificity"]
+                    }
+                    metadata["performance_metrics"].update(evaluation_metrics)
+                    
+                    # Save updated metadata
+                    metadata_manager.save_metadata(metadata, str(metadata_path))
+                    logger.info(f"Updated model metadata with evaluation results")
+        except Exception as e:
+            logger.warning(f"Could not update model metadata: {e}")
 
     # Log evaluation summary
     logger.info("Evaluation Summary", extra={

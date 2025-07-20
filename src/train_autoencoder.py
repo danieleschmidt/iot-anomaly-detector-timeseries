@@ -5,6 +5,7 @@ import logging
 from .data_preprocessor import DataPreprocessor
 from .autoencoder_model import build_autoencoder
 from .config import get_config
+from .model_metadata import save_model_with_metadata
 
 
 def main(
@@ -18,7 +19,7 @@ def main(
     model_path: str = "saved_models/autoencoder.h5",
     scaler_path: str | None = None,
     config_file: str | None = None,
-):
+) -> str:
     """Train the LSTM autoencoder and write it to ``model_path``.
 
     Parameters
@@ -75,16 +76,50 @@ def main(
     )
     
     batch_size = config.BATCH_SIZE
-    model.fit(windows, windows, epochs=epochs, batch_size=batch_size, verbose=1)
+    history = model.fit(windows, windows, epochs=epochs, batch_size=batch_size, verbose=1)
     
     model_file = Path(model_path)
     model_file.parent.mkdir(parents=True, exist_ok=True)
     model.save(model_file)
     logging.info(f"Model saved to {model_file}")
     
+    # Save model metadata
+    training_params = {
+        "epochs": epochs,
+        "window_size": window_size,
+        "step": step,
+        "latent_dim": latent_dim,
+        "lstm_units": lstm_units,
+        "batch_size": batch_size,
+        "scaler_type": "standard" if scaler == "standard" else "minmax"
+    }
+    
+    dataset_info = {
+        "csv_path": csv_path,
+        "num_windows": len(windows),
+        "window_shape": windows.shape,
+        "training_data_file": str(Path(csv_path).absolute())
+    }
+    
+    # Extract final training loss from history
+    final_loss = float(history.history['loss'][-1]) if history.history['loss'] else None
+    performance_metrics = {"final_training_loss": final_loss} if final_loss else {}
+    
+    model_path_str, metadata_path = save_model_with_metadata(
+        model_path=str(model_file),
+        training_params=training_params,
+        performance_metrics=performance_metrics,
+        dataset_info=dataset_info,
+        metadata_directory=str(model_file.parent)
+    )
+    
+    logging.info(f"Model metadata saved to {metadata_path}")
+    
     if scaler_path:
         dp.save(scaler_path)
         logging.info(f"Scaler saved to {scaler_path}")
+    
+    return str(model_file)
 
 
 if __name__ == "__main__":
