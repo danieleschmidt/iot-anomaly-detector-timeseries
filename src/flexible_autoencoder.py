@@ -247,7 +247,7 @@ class FlexibleAutoencoderBuilder:
                               name='latent_layer')(x)
         
         # Decoder preparation
-        x = layers.RepeatVector(self.input_shape[0])(encoded)\n        
+        x = layers.RepeatVector(self.input_shape[0])(encoded)
         # Decoder layers
         if self.decoder_layers:
             for layer_config in self.decoder_layers:
