@@ -2,6 +2,7 @@ import subprocess
 import sys
 from pathlib import Path
 import pytest
+import logging
 
 pytest.importorskip("numpy")
 pytest.importorskip("pandas")
@@ -19,7 +20,7 @@ def test_integration_via_marker(tmp_path):
         capture_output=True,
         text=True,
     )
-    print(result.stdout)
+    logging.info(f"Integration test output: {result.stdout}")
     assert result.returncode == 0
     assert 'passed' in result.stdout
 

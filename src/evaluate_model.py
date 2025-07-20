@@ -9,6 +9,7 @@ import numpy as np
 from .anomaly_detector import AnomalyDetector
 from . import train_autoencoder
 from .logging_config import get_logger
+from .model_metadata import ModelMetadata
 
 
 def evaluate(
@@ -98,7 +99,12 @@ def evaluate(
 
     if labels_path:
         import pandas as pd
-        from sklearn.metrics import precision_recall_fscore_support
+        from sklearn.metrics import (
+            precision_recall_fscore_support,
+            roc_auc_score,
+            confusion_matrix,
+            classification_report
+        )
 
         logger.info(f"Loading ground truth labels from {labels_path}")
         true_labels = pd.read_csv(labels_path, header=None)[0].to_numpy()
@@ -111,18 +117,78 @@ def evaluate(
             window_labels, preds, average="binary", zero_division=0
         )
         
-        logger.info(f"Classification metrics: precision={precision:.3f}, recall={recall:.3f}, f1={f1:.3f}")
+        # Calculate ROC AUC using reconstruction scores as probabilities
+        try:
+            roc_auc = roc_auc_score(window_labels, scores)
+        except ValueError:
+            # Handle case where all labels are the same class
+            roc_auc = 0.0
+            logger.warning("ROC AUC could not be calculated - all labels are the same class")
+        
+        # Calculate confusion matrix
+        tn, fp, fn, tp = confusion_matrix(window_labels, preds).ravel()
+        
+        # Calculate additional metrics
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+        accuracy = (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) > 0 else 0.0
+        
+        logger.info(f"Classification metrics: precision={precision:.3f}, recall={recall:.3f}, f1={f1:.3f}, roc_auc={roc_auc:.3f}")
+        logger.info(f"Confusion matrix: TP={tp}, TN={tn}, FP={fp}, FN={fn}")
+        logger.info(f"Additional metrics: accuracy={accuracy:.3f}, specificity={specificity:.3f}")
+        
         stats.update(
             {
                 "precision": float(precision),
                 "recall": float(recall),
                 "f1": float(f1),
+                "roc_auc": float(roc_auc),
+                "accuracy": float(accuracy),
+                "specificity": float(specificity),
+                "confusion_matrix": {
+                    "true_positives": int(tp),
+                    "true_negatives": int(tn),
+                    "false_positives": int(fp),
+                    "false_negatives": int(fn)
+                }
             }
         )
 
     if output_path:
         Path(output_path).write_text(json.dumps(stats, indent=2))
         logger.info(f"Evaluation results saved to {output_path}")
+    
+    # Update model metadata with evaluation results if labels were provided
+    if labels_path:
+        try:
+            metadata_manager = ModelMetadata(Path(model_path).parent)
+            model_versions = metadata_manager.list_model_versions()
+            
+            # Find the most recent version that matches our model file
+            model_name = Path(model_path).name
+            matching_version = None
+            for version_info in model_versions:
+                if version_info["model_file"] == model_name:
+                    matching_version = version_info["version"]
+                    break
+            
+            if matching_version:
+                # Load existing metadata and update with evaluation results
+                metadata_path = Path(model_path).parent / f"metadata_{matching_version}.json"
+                if metadata_path.exists():
+                    metadata = metadata_manager.load_metadata(str(metadata_path))
+                    
+                    # Update performance metrics with evaluation results
+                    evaluation_metrics = {
+                        f"eval_{k}": v for k, v in stats.items() 
+                        if k in ["precision", "recall", "f1", "roc_auc", "accuracy", "specificity"]
+                    }
+                    metadata["performance_metrics"].update(evaluation_metrics)
+                    
+                    # Save updated metadata
+                    metadata_manager.save_metadata(metadata, str(metadata_path))
+                    logger.info(f"Updated model metadata with evaluation results")
+        except Exception as e:
+            logger.warning(f"Could not update model metadata: {e}")
 
     # Log evaluation summary
     logger.info("Evaluation Summary", extra={

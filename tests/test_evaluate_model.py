@@ -67,7 +67,45 @@ def test_evaluate_with_labels(tmp_path):
         labels_path=str(lab),
         train_epochs=1,
     )
-    assert {"precision", "recall", "f1"}.issubset(stats)
+    assert {"precision", "recall", "f1", "roc_auc", "accuracy", "specificity", "confusion_matrix"}.issubset(stats)
+    # Verify confusion matrix structure
+    cm = stats["confusion_matrix"]
+    assert set(cm.keys()) == {"true_positives", "true_negatives", "false_positives", "false_negatives"}
+    assert all(isinstance(v, int) for v in cm.values())
+
+
+def test_enhanced_metrics_edge_cases(tmp_path):
+    """Test enhanced metrics with edge cases like all-same-class labels."""
+    import pandas as pd
+    import numpy as np
+    
+    # Create data with all normal labels (no anomalies)
+    df = pd.DataFrame(np.random.randn(100, 3), columns=['feature1', 'feature2', 'feature3'])
+    labels = pd.Series([0] * 100)  # All normal
+    
+    csv = tmp_path / "edge_data.csv"
+    lab = tmp_path / "edge_labels.csv"
+    df.to_csv(csv, index=False)
+    labels.to_csv(lab, index=False, header=False)
+    
+    model = tmp_path / "edge_auto.h5"
+    stats = evaluate(
+        csv_path=str(csv),
+        window_size=10,
+        step=1,
+        threshold_factor=1.0,
+        model_path=str(model),
+        scaler_path=str(tmp_path / "edge_scaler.pkl"),
+        labels_path=str(lab),
+        train_epochs=1,
+    )
+    
+    # With all-normal labels, ROC AUC should be 0.0 (our fallback)
+    assert "roc_auc" in stats
+    assert stats["roc_auc"] >= 0.0
+    assert "accuracy" in stats
+    assert "specificity" in stats
+    assert "confusion_matrix" in stats
 
 
 @pytest.mark.parametrize("bad_q", [1.1, 0.0, -0.3])

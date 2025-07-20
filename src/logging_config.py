@@ -23,7 +23,7 @@ class SensitiveDataFilter(logging.Filter):
         (re.compile(r'://[^:]+:[^@]+@', re.IGNORECASE), '://user:***@'),  # DB connection strings
     ]
     
-    def filter(self, record):
+    def filter(self, record) -> bool:
         """Filter sensitive data from log records."""
         if hasattr(record, 'msg') and record.msg:
             message = str(record.msg)
@@ -42,7 +42,7 @@ class StructuredFormatter(logging.Formatter):
             datefmt='%Y-%m-%d %H:%M:%S'
         )
     
-    def format(self, record):
+    def format(self, record) -> str:
         """Format log record with structured data."""
         # Start with default format
         formatted = super().format(record)
