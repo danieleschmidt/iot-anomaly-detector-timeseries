@@ -6,6 +6,7 @@ from .data_preprocessor import DataPreprocessor
 from .autoencoder_model import build_autoencoder
 from .config import get_config
 from .model_metadata import save_model_with_metadata
+from .training_callbacks import create_training_callbacks
 
 
 def main(
@@ -19,6 +20,8 @@ def main(
     model_path: str = "saved_models/autoencoder.h5",
     scaler_path: str | None = None,
     config_file: str | None = None,
+    enable_progress: bool = True,
+    enable_early_stopping: bool = True,
 ) -> str:
     """Train the LSTM autoencoder and write it to ``model_path``.
 
@@ -46,6 +49,10 @@ def main(
         If given, the fitted scaler is written to this file for reuse.
     config_file : str or None, optional
         Path to configuration file. If None, uses global config.
+    enable_progress : bool, optional
+        Whether to enable detailed progress indication during training.
+    enable_early_stopping : bool, optional
+        Whether to enable early stopping based on loss improvement.
     """
     # Load configuration
     config = get_config()
@@ -76,7 +83,28 @@ def main(
     )
     
     batch_size = config.BATCH_SIZE
-    history = model.fit(windows, windows, epochs=epochs, batch_size=batch_size, verbose=1)
+    
+    # Create training callbacks for progress indication
+    callbacks = []
+    if enable_progress:
+        callbacks = create_training_callbacks(
+            epochs=epochs,
+            enable_early_stopping=enable_early_stopping,
+            early_stopping_patience=max(5, epochs // 10),  # Adaptive patience
+            progress_log_frequency=max(1, epochs // 20) if epochs > 20 else 1,
+            metrics_log_frequency=max(1, epochs // 10) if epochs > 10 else 5
+        )
+        logging.info(f"Training with {len(callbacks)} callbacks enabled")
+    
+    # Train the model with callbacks
+    verbose_level = 1 if not enable_progress else 0  # Reduce TensorFlow verbosity when using custom progress
+    history = model.fit(
+        windows, windows, 
+        epochs=epochs, 
+        batch_size=batch_size, 
+        verbose=verbose_level,
+        callbacks=callbacks
+    )
     
     model_file = Path(model_path)
     model_file.parent.mkdir(parents=True, exist_ok=True)
@@ -155,6 +183,16 @@ if __name__ == "__main__":
         "--config-file",
         help="Path to configuration file",
     )
+    parser.add_argument(
+        "--disable-progress",
+        action="store_true",
+        help="Disable detailed progress indication during training"
+    )
+    parser.add_argument(
+        "--disable-early-stopping",
+        action="store_true",
+        help="Disable early stopping during training"
+    )
     args = parser.parse_args()
     main(
         csv_path=args.csv_path,
@@ -167,4 +205,6 @@ if __name__ == "__main__":
         model_path=args.model_path,
         scaler_path=args.scaler_path,
         config_file=args.config_file,
+        enable_progress=not args.disable_progress,
+        enable_early_stopping=not args.disable_early_stopping,
     )
