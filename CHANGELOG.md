@@ -1,5 +1,43 @@
 # Changelog
 
+## v0.0.5 - Data Validation & Quality Assurance
+
+### Added
+- **Comprehensive Data Validation Module** (`data_validator.py`)
+  - Three validation levels: Strict, Moderate, Permissive
+  - File format validation (existence, readability, size checks)
+  - Schema validation (column presence, data types, structure)
+  - Data quality checks (missing values, duplicates, constant columns, outliers)
+  - Time series validation (sequence length, monotonicity, intervals)
+  - Auto-fix capabilities for common data issues
+- **CLI Interface for Data Validation**
+  - Standalone validation tool with extensive options
+  - Support for expected columns, time column specification
+  - Auto-fix mode with cleaned data output
+  - Detailed validation reports in Markdown and JSON formats
+  - Verbose mode for comprehensive analysis
+- **DataPreprocessor Integration**
+  - Automatic validation in preprocessing pipeline
+  - Configurable validation levels and auto-fix options
+  - Backward compatibility with existing code
+  - Enhanced error reporting with validation details
+- **Comprehensive Test Suite**
+  - 50+ test cases covering all validation scenarios
+  - Unit tests for all validator components
+  - Integration tests for complete validation pipeline
+  - Edge case testing and error handling validation
+- **Documentation Updates**
+  - Detailed README section on data validation usage
+  - CLI examples and integration patterns
+  - Updated backlog with completed validation tasks
+
+### Technical Improvements
+- Enhanced error handling in data preprocessing
+- Structured validation results with detailed reporting
+- Configurable validation strictness for different use cases
+- Performance-optimized validation checks
+- Memory-efficient handling of large datasets
+
 ## v0.0.4
 
 - Added MIT license and contributor guide

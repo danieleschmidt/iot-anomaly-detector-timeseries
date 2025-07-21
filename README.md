@@ -139,6 +139,85 @@ This project leverages Jules for building out the anomaly detection pipeline. Pl
    ```
    This generates ``plot.png`` with red regions indicating detected anomalies.
 
+## Data Validation
+
+The project includes comprehensive data validation to ensure data quality and prevent pipeline failures. The data validator checks for schema compliance, data quality issues, and time series properties.
+
+### Basic Data Validation
+
+Validate a CSV file with default settings:
+
+```bash
+python -m src.data_validator data/raw/sensor_data.csv
+```
+
+### Advanced Validation Options
+
+Set validation strictness level:
+```bash
+# Strict validation (strict error checking)
+python -m src.data_validator data/raw/sensor_data.csv --validation-level strict
+
+# Permissive validation (more lenient)
+python -m src.data_validator data/raw/sensor_data.csv --validation-level permissive
+```
+
+Validate with expected columns:
+```bash
+python -m src.data_validator data/raw/sensor_data.csv \
+    --expected-columns temperature,humidity,pressure
+```
+
+Enable auto-fix for common issues:
+```bash
+python -m src.data_validator data/raw/sensor_data.csv \
+    --auto-fix \
+    --output data/processed/cleaned_sensor_data.csv
+```
+
+Time series validation with timestamp column:
+```bash
+python -m src.data_validator data/raw/sensor_data.csv \
+    --time-column timestamp \
+    --report validation_report.md
+```
+
+Generate comprehensive reports:
+```bash
+python -m src.data_validator data/raw/sensor_data.csv \
+    --report validation_report.md \
+    --json-summary validation_summary.json \
+    --verbose
+```
+
+### Validation Features
+
+The data validator checks for:
+
+- **File Format**: File existence, readability, and format compliance
+- **Schema Validation**: Column presence, data types, and structure
+- **Data Quality**: Missing values, duplicates, constant columns, and outliers
+- **Time Series Properties**: Sequence length, time monotonicity, and intervals
+- **Auto-fix Capabilities**: Automatic correction of common data issues
+
+### Integration with Data Preprocessing
+
+Data validation is automatically integrated into the data preprocessing pipeline. You can control validation behavior:
+
+```python
+from src.data_preprocessor import DataPreprocessor
+from src.data_validator import ValidationLevel
+
+# Enable validation with moderate strictness (default)
+preprocessor = DataPreprocessor(enable_validation=True, validation_level=ValidationLevel.MODERATE)
+
+# Disable validation for performance-critical applications
+preprocessor = DataPreprocessor(enable_validation=False)
+
+# Enable auto-fix during preprocessing
+scaled_data = preprocessor.fit_transform(df, validate=True, auto_fix=True)
+```
+
 ## Running Integration Tests
 
 Integration tests verify the full data generation, training, and detection pipeline. They are marked with the `integration` marker. Execute them separately with:

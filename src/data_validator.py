@@ -586,3 +586,203 @@ def create_validation_report(validation_result: ValidationResult, output_path: O
         Path(output_path).write_text(report_text)
     
     return report_text
+
+
+def main():
+    """
+    Command-line interface for data validation.
+    """
+    import argparse
+    import json
+    
+    parser = argparse.ArgumentParser(
+        description="Validate IoT sensor data files for quality and schema compliance",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Basic validation
+  python -m src.data_validator data/sensor_data.csv
+
+  # Strict validation with expected columns
+  python -m src.data_validator data/sensor_data.csv --strict --expected-columns sensor1,sensor2,sensor3
+
+  # Validation with auto-fix and time column
+  python -m src.data_validator data/sensor_data.csv --auto-fix --time-column timestamp
+
+  # Generate detailed report
+  python -m src.data_validator data/sensor_data.csv --report validation_report.md --output results.json
+        """
+    )
+    
+    parser.add_argument(
+        "input_file",
+        help="Path to the CSV file to validate"
+    )
+    
+    parser.add_argument(
+        "--validation-level",
+        choices=["strict", "moderate", "permissive"],
+        default="moderate",
+        help="Validation strictness level (default: moderate)"
+    )
+    
+    parser.add_argument(
+        "--expected-columns",
+        help="Comma-separated list of expected column names"
+    )
+    
+    parser.add_argument(
+        "--time-column",
+        help="Name of the time column for time series validation"
+    )
+    
+    parser.add_argument(
+        "--auto-fix",
+        action="store_true",
+        help="Automatically fix common data issues"
+    )
+    
+    parser.add_argument(
+        "--output",
+        help="Path to save the validated/fixed data (CSV format)"
+    )
+    
+    parser.add_argument(
+        "--report",
+        help="Path to save the validation report (Markdown format)"
+    )
+    
+    parser.add_argument(
+        "--json-summary",
+        help="Path to save validation summary as JSON"
+    )
+    
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable verbose output"
+    )
+    
+    args = parser.parse_args()
+    
+    # Convert string validation level to enum
+    level_map = {
+        "strict": ValidationLevel.STRICT,
+        "moderate": ValidationLevel.MODERATE,
+        "permissive": ValidationLevel.PERMISSIVE
+    }
+    validation_level = level_map[args.validation_level]
+    
+    # Parse expected columns
+    expected_columns = None
+    if args.expected_columns:
+        expected_columns = [col.strip() for col in args.expected_columns.split(",")]
+    
+    # Create validator
+    validator = DataValidator(validation_level)
+    
+    # Run validation
+    try:
+        print(f"🔍 Validating {args.input_file}...")
+        print(f"📋 Validation level: {args.validation_level}")
+        
+        if expected_columns:
+            print(f"📊 Expected columns: {', '.join(expected_columns)}")
+        
+        if args.time_column:
+            print(f"⏰ Time column: {args.time_column}")
+        
+        if args.auto_fix:
+            print("🔧 Auto-fix enabled")
+        
+        print()
+        
+        result, validated_df = validator.validate_complete(
+            args.input_file,
+            expected_columns=expected_columns,
+            time_column=args.time_column,
+            auto_fix=args.auto_fix
+        )
+        
+        # Print summary
+        status_emoji = "✅" if result.is_valid else "❌"
+        status_text = "PASSED" if result.is_valid else "FAILED"
+        print(f"{status_emoji} Validation {status_text}")
+        print(f"   Errors: {len(result.errors)}")
+        print(f"   Warnings: {len(result.warnings)}")
+        print(f"   Fixes Applied: {len(result.fixed_issues)}")
+        print()
+        
+        # Print errors
+        if result.errors:
+            print("❌ ERRORS:")
+            for i, error in enumerate(result.errors, 1):
+                print(f"   {i}. {error}")
+            print()
+        
+        # Print warnings
+        if result.warnings and args.verbose:
+            print("⚠️  WARNINGS:")
+            for i, warning in enumerate(result.warnings, 1):
+                print(f"   {i}. {warning}")
+            print()
+        
+        # Print fixes
+        if result.fixed_issues:
+            print("🔧 FIXES APPLIED:")
+            for i, fix in enumerate(result.fixed_issues, 1):
+                print(f"   {i}. {fix}")
+            print()
+        
+        # Print data summary
+        if validated_df is not None and args.verbose:
+            print("📊 DATA SUMMARY:")
+            print(f"   Rows: {len(validated_df)}")
+            print(f"   Columns: {len(validated_df.columns)}")
+            print(f"   Column names: {', '.join(validated_df.columns)}")
+            print()
+        
+        # Save outputs
+        if args.output and validated_df is not None:
+            validated_df.to_csv(args.output, index=False)
+            print(f"💾 Validated data saved to: {args.output}")
+        
+        if args.report:
+            report_text = create_validation_report(result, args.report)
+            print(f"📄 Validation report saved to: {args.report}")
+        
+        if args.json_summary:
+            summary_data = {
+                "is_valid": result.is_valid,
+                "errors": result.errors,
+                "warnings": result.warnings,
+                "fixed_issues": result.fixed_issues,
+                "summary": result.summary,
+                "validation_level": args.validation_level,
+                "input_file": args.input_file,
+                "data_shape": [len(validated_df), len(validated_df.columns)] if validated_df is not None else None
+            }
+            
+            with open(args.json_summary, 'w') as f:
+                json.dump(summary_data, f, indent=2, default=str)
+            print(f"📋 JSON summary saved to: {args.json_summary}")
+        
+        # Exit with appropriate code
+        exit_code = 0 if result.is_valid else 1
+        if not result.is_valid:
+            print(f"\n❌ Validation failed with {len(result.errors)} errors")
+        else:
+            print(f"\n✅ Validation completed successfully")
+        
+        return exit_code
+        
+    except Exception as e:
+        print(f"💥 Error during validation: {str(e)}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 2
+
+
+if __name__ == "__main__":
+    exit(main())
