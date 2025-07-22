@@ -172,12 +172,60 @@
   - **Risk Reduction**: Eliminated potential data loss from model management operations
   - **Code Quality**: Improved reliability through systematic edge case testing
 
-## Next Actions  
-1. Streaming data processing optimization (WSJF: 5.2) 
-2. Memory-efficient window creation optimization (WSJF: 6.7)
-3. Documentation enhancements and API reference  
-4. Model performance monitoring and alerting system
-5. Continuous integration pipeline enhancements
+## Next Actions - Updated Priority Queue
+
+### Highest Priority (WSJF > 6.0)
+1. **Memory-Efficient Window Creation Optimization (WSJF: 6.7)**
+   - **Business Value**: 7 - Enables processing of much larger datasets
+   - **Time Criticality**: 6 - Important for scalability with large IoT deployments
+   - **Risk Reduction**: 7 - Prevents out-of-memory crashes with large datasets
+   - **Effort**: 3 - Simple generator-based refactoring of existing windowing code
+   - **Impact**: Removes memory constraints for very large datasets, enables processing 10x+ larger files
+
+### High Priority (WSJF 4.0-6.0)  
+2. **Performance Monitoring Integration (WSJF: 5.2)**
+   - **Business Value**: 6 - Essential for production observability and debugging
+   - **Time Criticality**: 7 - Critical for production monitoring and alerting
+   - **Risk Reduction**: 8 - Early detection of performance degradation and issues
+   - **Effort**: 4 - Extension of existing logging framework with additional metrics
+   - **Impact**: Production-ready monitoring with memory usage, GPU utilization, cache metrics
+
+3. **Caching Strategy Implementation (WSJF: 4.2)**
+   - **Business Value**: 5 - Reduces computation costs for repeated operations
+   - **Time Criticality**: 4 - Nice performance improvement for common use cases
+   - **Risk Reduction**: 5 - Improves system responsiveness and user experience  
+   - **Effort**: 3.3 - Standard LRU cache implementation for preprocessing and predictions
+   - **Impact**: Significant performance boost for repeated operations and common data patterns
+
+4. **Data Drift Detection System (WSJF: 4.0)**
+   - **Business Value**: 8 - Critical for maintaining model accuracy over time
+   - **Time Criticality**: 6 - Important for production ML system reliability
+   - **Risk Reduction**: 6 - Prevents silent model performance degradation
+   - **Effort**: 5 - Statistical tests, monitoring dashboard, automatic retraining triggers
+   - **Impact**: Automated model health monitoring with drift alerts and retraining recommendations
+
+### Medium Priority (WSJF 2.5-4.0)
+5. **Security Hardening (WSJF: 3.2)**
+   - **Business Value**: 6 - Essential for production deployment security
+   - **Time Criticality**: 5 - Important for enterprise adoption
+   - **Risk Reduction**: 7 - Prevents security vulnerabilities and data breaches
+   - **Effort**: 5.6 - Input sanitization, path traversal prevention, secure serialization
+   - **Impact**: Production-ready security posture with comprehensive input validation
+
+6. **Model Serving REST API (WSJF: 2.8)**
+   - **Business Value**: 7 - Enables easy deployment and integration
+   - **Time Criticality**: 4 - Nice-to-have for wider adoption
+   - **Risk Reduction**: 3 - Improves deployment flexibility
+   - **Effort**: 5 - FastAPI implementation with health checks and versioning
+   - **Impact**: Easy model deployment with standardized REST interface
+
+### Research & Innovation (WSJF < 2.5)
+7. **Model Explainability Tools (WSJF: 2.3)**
+   - **Business Value**: 6 - Important for trust and debugging
+   - **Time Criticality**: 3 - Research feature for better understanding
+   - **Risk Reduction**: 3 - Helps debug model behavior
+   - **Effort**: 5.2 - SHAP integration, attention visualization, feature importance
+   - **Impact**: Model interpretability for debugging and trust building
 
 ## Technical Debt Log
 - **RESOLVED: Missing Error Handling** - ✅ Comprehensive error handling added to DataPreprocessor
@@ -215,3 +263,38 @@
     - Maintains identical accuracy with improved efficiency
 
 - **RESOLVED: Batched Inference Performance** - ✅ Implemented memory-efficient batch processing with automatic optimization
+
+- [x] **COMPLETED: Streaming Data Processing Support (WSJF: 8.0)**
+  - **Business Value**: 10 - Essential for real-time IoT anomaly detection
+  - **Time Criticality**: 9 - Critical competitive feature for IoT systems  
+  - **Risk Reduction**: 5 - Enables real-time monitoring and immediate response
+  - **Effort**: 3 - Leveraged existing batching infrastructure and design patterns
+  - **Created StreamingProcessor class** - Complete real-time processing system
+    - Configurable buffer management with circular buffer overflow handling
+    - Real-time anomaly detection with customizable thresholds
+    - Threading-based continuous processing with graceful shutdown
+    - Callback system for immediate anomaly notifications
+    - Performance monitoring with comprehensive metrics tracking
+  - **Enhanced DataPreprocessor** - Added streaming-optimized methods
+    - `create_sliding_windows()` method for memory-efficient window creation
+    - Automatic scaler fitting for streaming data
+    - Optimized for continuous data ingestion
+  - **Comprehensive CLI Interface** - Full-featured streaming command-line tool
+    - Interactive mode for real-time data input and monitoring
+    - Batch file processing with progress tracking
+    - Configurable processing parameters via command line or JSON config
+    - Real-time performance metrics display
+    - Results export in multiple formats (JSON, CSV)
+  - **Robust Configuration System** - Flexible and validated configuration
+    - StreamingConfig dataclass with automatic validation
+    - Serialization support for configuration persistence
+    - Sensible defaults with full customization options
+  - **Production-Ready Features**:
+    - Thread-safe operations with proper resource cleanup
+    - Comprehensive error handling and logging
+    - Memory-efficient circular buffer management
+    - Graceful shutdown with signal handling
+    - Performance monitoring and metrics collection
+  - **Impact**: Transforms system from batch-only to real-time streaming capability
+  - **Scalability**: Handles continuous data streams with configurable memory usage
+  - **Integration**: Seamlessly integrates with existing model and preprocessing infrastructure

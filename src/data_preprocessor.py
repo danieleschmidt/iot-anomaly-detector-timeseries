@@ -228,6 +228,59 @@ class DataPreprocessor:
         except Exception as e:
             logging.error(f"Failed to create windows: {e}")
             raise ValueError(f"Unable to create windows: {e}") from e
+    
+    def create_sliding_windows(self, data: np.ndarray, window_size: int, step: int = 1) -> np.ndarray:
+        """Create sliding windows from data with preprocessing.
+        
+        This method applies scaling and creates sliding windows in one step,
+        optimized for streaming data processing.
+        
+        Parameters
+        ----------
+        data : np.ndarray
+            Input data array
+        window_size : int
+            Size of each window
+        step : int, default 1
+            Step size between windows
+            
+        Returns
+        -------
+        np.ndarray
+            Preprocessed sliding windows
+        """
+        if window_size <= 0:
+            raise ValueError("window_size must be positive")
+        
+        if step <= 0:
+            raise ValueError("step must be positive")
+        
+        if len(data) < window_size:
+            raise ValueError(f"Data length ({len(data)}) must be >= window_size ({window_size})")
+        
+        try:
+            # Apply scaling if not already fitted
+            if not hasattr(self.scaler, 'scale_') or self.scaler.scale_ is None:
+                logging.info("Fitting scaler on streaming data")
+                scaled_data = self.scaler.fit_transform(data)
+            else:
+                scaled_data = self.scaler.transform(data)
+            
+            # Create sliding windows
+            windows = []
+            for start in range(0, len(scaled_data) - window_size + 1, step):
+                windows.append(scaled_data[start:start + window_size])
+            
+            if not windows:
+                raise ValueError("No windows could be created with given parameters")
+            
+            result = np.stack(windows)
+            logging.debug(f"Created {len(windows)} sliding windows with shape {result.shape}")
+            return result
+            
+        except Exception as e:
+            logging.error(f"Failed to create sliding windows: {e}")
+            raise ValueError(f"Unable to create sliding windows: {e}") from e
 
     def load_and_preprocess(self, csv_path: str, window_size: int, step: int = 1) -> np.ndarray:
         """Load CSV data, preprocess it, and create windows."""
