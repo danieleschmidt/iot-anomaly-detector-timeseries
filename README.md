@@ -103,6 +103,19 @@ This project leverages Jules for building out the anomaly detection pipeline. Pl
   the threshold from the reconstruction error. These options are mutually
  exclusive and ``--quantile`` must be between 0 and 1 (exclusive). Invalid
  quantile values are rejected before the model is loaded.
+ 
+  **Performance Optimization for Large Datasets:**
+  ```bash
+  python -m src.anomaly_detector --model-path saved_models/autoencoder.h5 \
+      --csv-path large_sensor_data.csv \
+      --use-batched \
+      --batch-size 512 \
+      --quantile 0.95 \
+      --output large_predictions.csv
+  ```
+  For datasets with >1000 windows, batched processing is automatically enabled.
+  Use ``--batch-size`` to control memory usage and ``--use-batched`` to force
+  batching on smaller datasets for consistent behavior.
 5. Evaluate reconstruction error statistics:
    ```bash
    python -m src.evaluate_model \

@@ -47,6 +47,57 @@ class AnomalyDetector:
         self.logger.debug(f"Score statistics: mean={scores.mean():.4f}, std={scores.std():.4f}")
         return scores
 
+    def score_batched(self, sequences: np.ndarray, batch_size: int = 256) -> np.ndarray:
+        """Compute reconstruction error scores for sequences using batched processing.
+        
+        This method processes sequences in batches to optimize memory usage and provide
+        progress feedback for large datasets. It produces identical results to the 
+        score() method but with better scalability.
+        
+        Parameters
+        ----------
+        sequences : np.ndarray
+            Input sequences of shape (n_sequences, window_size, n_features)
+        batch_size : int, optional
+            Number of sequences to process in each batch (default: 256)
+            
+        Returns
+        -------
+        np.ndarray
+            Reconstruction error scores for each sequence
+            
+        Examples
+        --------
+        >>> detector = AnomalyDetector("model.h5")
+        >>> sequences = np.random.randn(10000, 30, 3)  # Large dataset
+        >>> scores = detector.score_batched(sequences, batch_size=512)
+        """
+        if len(sequences) == 0:
+            return np.array([])
+        
+        n_sequences = len(sequences)
+        scores = np.zeros(n_sequences)
+        
+        self.logger.info(f"Processing {n_sequences} sequences in batches of {batch_size}")
+        
+        for i in range(0, n_sequences, batch_size):
+            batch_end = min(i + batch_size, n_sequences)
+            batch = sequences[i:batch_end]
+            
+            # Compute reconstruction for this batch
+            batch_reconstructed = self.model.predict(batch, verbose=0)
+            batch_scores = np.mean(np.square(batch - batch_reconstructed), axis=(1, 2))
+            
+            scores[i:batch_end] = batch_scores
+            
+            # Log progress every 10 batches or at completion
+            if i % (batch_size * 10) == 0 or batch_end == n_sequences:
+                progress_pct = (batch_end / n_sequences) * 100
+                self.logger.info(f"Processed {batch_end:,}/{n_sequences:,} sequences ({progress_pct:.1f}%)")
+        
+        self.logger.debug(f"Batch processing complete. Score statistics: mean={scores.mean():.4f}, std={scores.std():.4f}")
+        return scores
+
     def predict(
         self,
         csv_path: str,
@@ -54,6 +105,8 @@ class AnomalyDetector:
         step: int = 1,
         threshold: float | None = None,
         quantile: float | None = None,
+        batch_size: int | None = None,
+        use_batched: bool = False,
     ) -> np.ndarray:
         """Return a boolean array indicating anomalous windows.
 
@@ -72,10 +125,27 @@ class AnomalyDetector:
             Quantile of the reconstruction error distribution used to derive the
             threshold. Must be between 0 and 1 (exclusive) and is mutually
             exclusive with ``threshold``.
+        batch_size : int or None, optional
+            Batch size for processing (only used when use_batched=True).
+            If None, defaults to 256.
+        use_batched : bool, optional
+            Whether to use batched processing for improved memory efficiency
+            and progress tracking. Recommended for large datasets.
         """
         self.logger.info(f"Predicting anomalies for {csv_path}")
         windows = self.preprocessor.load_and_preprocess(csv_path, window_size, step)
-        scores = self.score(windows)
+        
+        # Automatically use batched processing for large datasets
+        n_windows = len(windows)
+        if use_batched or n_windows > 1000:
+            if n_windows > 1000 and not use_batched:
+                self.logger.info(f"Large dataset detected ({n_windows:,} windows), automatically using batched processing")
+            
+            if batch_size is None:
+                batch_size = 256
+            scores = self.score_batched(windows, batch_size=batch_size)
+        else:
+            scores = self.score(windows)
         
         if threshold is not None and quantile is not None:
             raise ValueError("Provide either threshold or quantile, not both")
@@ -110,6 +180,8 @@ def main(
     threshold: float | None = None,
     quantile: float | None = None,
     output_path: str = "predictions.csv",
+    batch_size: int | None = None,
+    use_batched: bool = False,
 ) -> None:
     """Run anomaly detection on ``csv_path`` and write flags to ``output_path``.
 
@@ -133,6 +205,12 @@ def main(
         ``threshold``.
     output_path : str, optional
         Where to write the anomaly flags as a CSV file.
+    batch_size : int or None, optional
+        Batch size for processing (only used when use_batched=True).
+        If None, defaults to 256.
+    use_batched : bool, optional
+        Force batched processing even for smaller datasets. Automatically
+        enabled for datasets with >1000 windows.
     """
     logger = get_logger(__name__)
     logger.info(f"Starting anomaly detection: input={csv_path}, output={output_path}")
@@ -141,7 +219,8 @@ def main(
     if quantile is not None and not 0 < quantile < 1:
         raise ValueError("quantile must be between 0 and 1 (exclusive)")
 
-    preds = detector.predict(csv_path, window_size, step, threshold, quantile)
+    preds = detector.predict(csv_path, window_size, step, threshold, quantile, 
+                           batch_size, use_batched)
     pd.Series(preds.astype(int)).to_csv(output_path, index=False, header=False)
     logger.info(f"Anomaly predictions saved to {output_path}")
 
@@ -177,6 +256,16 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument("--output", default="predictions.csv")
+    parser.add_argument(
+        "--batch-size", 
+        type=int, 
+        help="Batch size for processing (default: 256 when batched processing is used)"
+    )
+    parser.add_argument(
+        "--use-batched", 
+        action="store_true",
+        help="Force batched processing (automatically enabled for >1000 windows)"
+    )
     args = parser.parse_args()
 
     main(
@@ -188,4 +277,6 @@ if __name__ == "__main__":
         threshold=args.threshold,
         quantile=args.quantile,
         output_path=args.output,
+        batch_size=args.batch_size,
+        use_batched=args.use_batched,
     )
