@@ -8,10 +8,11 @@ import time
 from typing import Optional, Tuple, Generator, Iterator, Dict, Any
 
 from .data_validator import DataValidator, ValidationLevel, ValidationResult
+from .caching_strategy import cache_preprocessing, get_cache_stats
 
 
 class DataPreprocessor:
-    def __init__(self, scaler=None, enable_validation: bool = True, validation_level: ValidationLevel = ValidationLevel.MODERATE):
+    def __init__(self, scaler=None, enable_validation: bool = True, validation_level: ValidationLevel = ValidationLevel.MODERATE, enable_caching: bool = True):
         """Preprocess raw sensor data.
 
         Parameters
@@ -22,9 +23,12 @@ class DataPreprocessor:
             Whether to enable comprehensive data validation before preprocessing.
         validation_level : ValidationLevel, default ValidationLevel.MODERATE
             Validation strictness level.
+        enable_caching : bool, default True
+            Whether to enable caching for preprocessing operations.
         """
         self.scaler = scaler or MinMaxScaler()
         self.enable_validation = enable_validation
+        self.enable_caching = enable_caching
         self.validator = DataValidator(validation_level) if enable_validation else None
 
     def save(self, path: str) -> None:
@@ -204,6 +208,7 @@ class DataPreprocessor:
             logging.error(f"Failed to transform data: {e}")
             raise ValueError(f"Unable to transform data: {e}") from e
 
+    @cache_preprocessing
     def create_windows(self, data: np.ndarray, window_size: int, step: int = 1) -> np.ndarray:
         """Create sliding windows from data."""
         if window_size <= 0:
@@ -230,6 +235,7 @@ class DataPreprocessor:
             logging.error(f"Failed to create windows: {e}")
             raise ValueError(f"Unable to create windows: {e}") from e
     
+    @cache_preprocessing  
     def create_sliding_windows(self, data: np.ndarray, window_size: int, step: int = 1) -> np.ndarray:
         """Create sliding windows from data with preprocessing.
         
@@ -604,3 +610,22 @@ class DataPreprocessor:
         
         scaled = self.fit_transform(df)
         return self.create_windows(scaled, window_size, step)
+    
+    def get_cache_stats(self) -> dict:
+        """Get cache statistics for preprocessing operations."""
+        if not self.enable_caching:
+            return {"caching_enabled": False}
+        
+        stats = get_cache_stats()
+        return {
+            "caching_enabled": True,
+            "preprocessing_cache": stats.get("preprocessing", {}),
+            "all_cache_stats": stats
+        }
+    
+    def clear_cache(self) -> None:
+        """Clear preprocessing cache."""
+        if self.enable_caching:
+            from .caching_strategy import clear_all_caches
+            clear_all_caches()
+            logging.info("Preprocessing cache cleared")
