@@ -167,8 +167,10 @@ def monitor_drift_continuously(
                         print(f"   Drift alerts: {drift_alerts}")
                         print(f"   Alert rate: {drift_alerts/check_count:.1%}")
                         print(f"   Most drifted feature: {summary.get('most_drifted_feature', 'None')}")
-                
-                except Exception as e:
+                else:
+                    print(f"⚠️  Data source not found: {data_source}")
+                    
+            except Exception as e:
                     print(f"❌ Error during drift check: {e}")
                     logger.error(f"Drift monitoring error: {e}")
             
