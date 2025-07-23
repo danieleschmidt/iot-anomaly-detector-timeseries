@@ -8,6 +8,7 @@ from tensorflow.keras.models import load_model
 
 from .data_preprocessor import DataPreprocessor
 from .logging_config import get_logger
+from .caching_strategy import cache_prediction, get_cache_stats
 
 
 class AnomalyDetector:
@@ -39,6 +40,7 @@ class AnomalyDetector:
                 self.logger.info("No scaler path provided, using default MinMaxScaler")
             self.preprocessor = DataPreprocessor()
 
+    @cache_prediction
     def score(self, sequences: np.ndarray) -> np.ndarray:
         """Compute reconstruction error scores for sequences."""
         self.logger.debug(f"Computing reconstruction scores for {len(sequences)} sequences")
@@ -169,6 +171,20 @@ class AnomalyDetector:
         self.logger.info(f"Detected {anomaly_count} anomalous windows out of {len(predictions)} total")
         
         return predictions
+    
+    def get_cache_stats(self) -> dict:
+        """Get cache statistics for prediction operations."""
+        stats = get_cache_stats()
+        return {
+            "prediction_cache": stats.get("prediction", {}),
+            "all_cache_stats": stats
+        }
+    
+    def clear_cache(self) -> None:
+        """Clear prediction cache."""
+        from .caching_strategy import clear_all_caches
+        clear_all_caches()
+        self.logger.info("Prediction cache cleared")
 
 
 def main(
