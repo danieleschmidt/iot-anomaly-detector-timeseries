@@ -8,6 +8,7 @@ from typing import Dict, Any, Optional
 import logging
 
 from .logging_config import get_logger
+from .security_utils import validate_file_path, secure_json_load, sanitize_error_message, validate_file_size
 
 
 class ModelMetadata:
@@ -38,17 +39,21 @@ class ModelMetadata:
         str
             SHA256 hash of the model file
         """
-        model_file = Path(model_path)
-        if not model_file.exists():
-            raise FileNotFoundError(f"Model file not found: {model_path}")
+        try:
+            # Validate the model file path for security
+            validated_path = validate_file_path(model_path)
             
-        sha256_hash = hashlib.sha256()
-        with open(model_file, "rb") as f:
-            # Read file in chunks to handle large models
-            for chunk in iter(lambda: f.read(4096), b""):
-                sha256_hash.update(chunk)
-        
-        return sha256_hash.hexdigest()
+            sha256_hash = hashlib.sha256()
+            with open(validated_path, "rb") as f:
+                # Read file in chunks to handle large models
+                for chunk in iter(lambda: f.read(4096), b""):
+                    sha256_hash.update(chunk)
+            
+            return sha256_hash.hexdigest()
+        except Exception as e:
+            sanitized_error = sanitize_error_message(str(e))
+            self.logger.error(f"Failed to generate model hash: {sanitized_error}")
+            raise
     
     def create_metadata(
         self,
@@ -151,15 +156,16 @@ class ModelMetadata:
         Dict[str, Any]
             Loaded metadata dictionary
         """
-        metadata_file = Path(metadata_path)
-        if not metadata_file.exists():
-            raise FileNotFoundError(f"Metadata file not found: {metadata_path}")
-        
-        with open(metadata_file, 'r') as f:
-            metadata = json.load(f)
-        
-        self.logger.info(f"Loaded metadata from {metadata_file}")
-        return metadata
+        try:
+            # Use secure JSON loading with path validation and size limits
+            metadata = secure_json_load(metadata_path, max_size_mb=10.0)
+            
+            self.logger.info(f"Loaded metadata from {sanitize_error_message(metadata_path)}")
+            return metadata
+        except Exception as e:
+            sanitized_error = sanitize_error_message(str(e))
+            self.logger.error(f"Failed to load metadata: {sanitized_error}")
+            raise
     
     def list_model_versions(self) -> list[Dict[str, Any]]:
         """List all available model versions with their metadata.

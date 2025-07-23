@@ -6,6 +6,8 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, Optional
 
+from .security_utils import validate_file_path, sanitize_error_message, validate_file_size
+
 
 class Config:
     """Configuration manager with support for files, environment variables, and defaults."""
@@ -62,22 +64,28 @@ class Config:
     
     def _load_from_file(self, config_file: str) -> None:
         """Load configuration from YAML file."""
-        config_path = Path(config_file)
-        
-        if not config_path.exists():
-            raise FileNotFoundError(f"Configuration file not found: {config_file}")
-        
         try:
-            with open(config_path, 'r') as f:
+            # Validate file path for security
+            validated_path = validate_file_path(config_file)
+            
+            # Validate file size (config files should be small)
+            validate_file_size(validated_path, max_size_mb=1.0)
+            
+            with open(validated_path, 'r') as f:
                 file_config = yaml.safe_load(f)
             
             if file_config:
                 self._config.update(file_config)
-                logging.info(f"Loaded configuration from {config_file}")
+                logging.info(f"Loaded configuration from {sanitize_error_message(config_file)}")
+        except (FileNotFoundError, ValueError) as e:
+            # Re-raise validation errors as-is
+            raise e
         except yaml.YAMLError as e:
-            raise ValueError(f"Invalid YAML configuration file {config_file}: {e}")
+            sanitized_error = sanitize_error_message(str(e))
+            raise ValueError(f"Invalid YAML configuration file: {sanitized_error}") from e
         except Exception as e:
-            raise ValueError(f"Unable to read configuration file {config_file}: {e}")
+            sanitized_error = sanitize_error_message(str(e))
+            raise ValueError(f"Unable to read configuration file: {sanitized_error}") from e
     
     def _load_from_env(self) -> None:
         """Load configuration from environment variables."""
