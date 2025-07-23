@@ -9,6 +9,7 @@ from typing import Optional, Tuple, Generator, Iterator, Dict, Any
 
 from .data_validator import DataValidator, ValidationLevel, ValidationResult
 from .caching_strategy import cache_preprocessing, get_cache_stats
+from .security_utils import validate_file_path, validate_joblib_file, sanitize_error_message
 
 
 class DataPreprocessor:
@@ -34,27 +35,33 @@ class DataPreprocessor:
     def save(self, path: str) -> None:
         """Persist the underlying scaler to ``path``."""
         try:
-            joblib.dump(self.scaler, Path(path))
-            logging.info(f"Scaler saved successfully to {path}")
+            # Validate and sanitize the output path
+            validated_path = validate_file_path(path) if Path(path).exists() else path
+            joblib.dump(self.scaler, Path(validated_path))
+            logging.info(f"Scaler saved successfully to {sanitize_error_message(path)}")
         except Exception as e:
-            logging.error(f"Failed to save scaler to {path}: {e}")
-            raise ValueError(f"Unable to save scaler to {path}: {e}") from e
+            sanitized_error = sanitize_error_message(str(e))
+            logging.error(f"Failed to save scaler: {sanitized_error}")
+            raise ValueError(f"Unable to save scaler: {sanitized_error}") from e
 
     @classmethod
     def load(cls, path: str) -> "DataPreprocessor":
         """Load a scaler from ``path`` and return a new ``DataPreprocessor``."""
-        path_obj = Path(path)
-        
-        if not path_obj.exists():
-            raise FileNotFoundError(f"Scaler file not found: {path}")
-        
         try:
-            scaler = joblib.load(path_obj)
-            logging.info(f"Scaler loaded successfully from {path}")
+            # Validate the joblib file for security
+            validated_path = validate_joblib_file(path)
+            
+            # Load the scaler with additional error handling
+            scaler = joblib.load(validated_path)
+            logging.info(f"Scaler loaded successfully from {sanitize_error_message(path)}")
             return cls(scaler)
+        except (FileNotFoundError, ValueError) as e:
+            # Re-raise validation errors as-is
+            raise e
         except Exception as e:
-            logging.error(f"Failed to load scaler from {path}: {e}")
-            raise ValueError(f"Unable to load scaler from {path}: {e}") from e
+            sanitized_error = sanitize_error_message(str(e))
+            logging.error(f"Failed to load scaler: {sanitized_error}")
+            raise ValueError(f"Unable to load scaler: {sanitized_error}") from e
 
     def validate_data(self, df: pd.DataFrame, auto_fix: bool = False) -> Tuple[ValidationResult, pd.DataFrame]:
         """

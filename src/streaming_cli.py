@@ -11,6 +11,7 @@ from typing import Dict, Any
 
 from .streaming_processor import StreamingProcessor, StreamingConfig
 from .logging_config import get_logger
+from .security_utils import secure_json_load, sanitize_error_message
 
 
 class StreamingCLI:
@@ -179,10 +180,14 @@ Examples:
         try:
             # Load or create configuration
             if args.config:
-                with open(args.config, 'r') as f:
-                    config_dict = json.load(f)
+                try:
+                    config_dict = secure_json_load(args.config, max_size_mb=1.0)
                     config = StreamingConfig.from_dict(config_dict)
-                self.logger.info(f"Loaded configuration from {args.config}")
+                    self.logger.info(f"Loaded configuration from {sanitize_error_message(args.config)}")
+                except Exception as e:
+                    sanitized_error = sanitize_error_message(str(e))
+                    self.logger.error(f"Failed to load configuration: {sanitized_error}")
+                    raise
             else:
                 config = StreamingConfig(
                     window_size=args.window_size,
@@ -223,11 +228,11 @@ Examples:
     
     def process_input_file(self, input_path: str, output_path: str = None) -> None:
         """Process data from input file."""
-        self.logger.info(f"Processing input file: {input_path}")
+        self.logger.info(f"Processing input file: {sanitize_error_message(input_path)}")
         
         try:
-            with open(input_path, 'r') as f:
-                data = json.load(f)
+            # Use secure JSON loading with size limits
+            data = secure_json_load(input_path, max_size_mb=50.0)
             
             if isinstance(data, dict) and 'data' in data:
                 data_points = data['data']

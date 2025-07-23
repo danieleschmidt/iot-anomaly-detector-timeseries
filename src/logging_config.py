@@ -18,13 +18,21 @@ from .config import get_config
 class SensitiveDataFilter(logging.Filter):
     """Filter to mask sensitive data in log messages."""
     
-    # Patterns for sensitive data
+    # Enhanced patterns for sensitive data
     SENSITIVE_PATTERNS = [
         (re.compile(r'password[=:\s]+[^\s]+', re.IGNORECASE), 'password=***'),
         (re.compile(r'api[_\s]*key[=:\s]+[^\s]+', re.IGNORECASE), 'api_key=***'),
         (re.compile(r'token[=:\s]+[^\s]+', re.IGNORECASE), 'token=***'),
         (re.compile(r'secret[=:\s]+[^\s]+', re.IGNORECASE), 'secret=***'),
         (re.compile(r'://[^:]+:[^@]+@', re.IGNORECASE), '://user:***@'),  # DB connection strings
+        # Additional security patterns
+        (re.compile(r'/home/[^/\s]+', re.IGNORECASE), '/home/[USER]'),  # Home directories
+        (re.compile(r'\\Users\\[^\\s]+', re.IGNORECASE), '\\Users\\[USER]'),  # Windows user dirs
+        (re.compile(r'/[^\s]*(?:/[^\s]*){3,}', re.IGNORECASE), '[PATH_REDACTED]'),  # Long paths
+        (re.compile(r'[A-Z]:\\[^\s]*(?:\\[^\s]*){2,}', re.IGNORECASE), '[PATH_REDACTED]'),  # Windows paths
+        (re.compile(r'auth[=:\s]+[^\s]+', re.IGNORECASE), 'auth=***'),
+        (re.compile(r'bearer\s+[^\s]+', re.IGNORECASE), 'bearer ***'),
+        (re.compile(r'ssh-[a-z0-9]+ [^\s]+', re.IGNORECASE), 'ssh-key ***'),  # SSH keys
     ]
     
     def filter(self, record) -> bool:
