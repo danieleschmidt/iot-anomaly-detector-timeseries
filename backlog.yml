@@ -1,0 +1,15 @@
+metadata:
+  version: '2.0'
+  last_discovery: '2025-07-24T11:35:58.024865'
+  total_items: 1
+  wsjf_methodology: true
+backlog:
+  ready: []
+  doing: []
+  pr_review: []
+  blocked: []
+discovery_sources:
+- backlog_md
+- code_comments
+- security_scan
+- dependency_audit

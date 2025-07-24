@@ -1,0 +1,102 @@
+---
+# Automation Scope Configuration
+# Defines permitted boundaries for autonomous operations
+# Version: 1.0
+# Created: 2025-07-24
+
+automation_permissions:
+  # Default scope - current repository
+  default_scope: "./."
+  
+  # Permitted write operations within current repo
+  write_permissions:
+    - "src/**/*.py"          # Source code modifications
+    - "tests/**/*.py"        # Test file modifications
+    - "docs/**/*.md"         # Documentation updates
+    - "*.yml"                # Configuration files
+    - "*.yaml"               # Configuration files
+    - "*.json"               # Data/config files
+    - "requirements*.txt"    # Dependency files
+    - "pyproject.toml"       # Project configuration
+    - "Makefile"             # Build configuration
+    - "scripts/**/*.sh"      # Build/setup scripts
+    
+  # Explicitly forbidden operations
+  forbidden_operations:
+    - ".github/workflows/**" # No GitHub Actions modifications
+    - ".git/**"              # No direct git operations
+    - "venv/**"              # No virtual environment modifications
+    - "/etc/**"              # No system configuration
+    - "/usr/**"              # No system directories
+    - "/home/**"             # No user directories outside repo
+    
+  # External repositories (READ ONLY unless approved)
+  external_repos:
+    read_only: true
+    approval_required: true
+    
+  # CI/CD permissions
+  ci_permissions:
+    read_status: true
+    read_logs: true
+    trigger_builds: false    # Require explicit approval
+    modify_workflows: false  # Always forbidden
+    
+  # Cross-repository operations
+  cross_repo:
+    enabled: false
+    requires_manifest: true
+    requires_approval: true
+
+security_constraints:
+  # Prevent self-propagating operations
+  no_self_propagation: true
+  no_cron_creation: true
+  no_org_wide_policies: true
+  
+  # Require human approval for high-risk operations
+  high_risk_approval:
+    - "database_migrations"
+    - "auth_system_changes"
+    - "crypto_operations"
+    - "public_api_changes"
+    - "major_refactoring"
+    
+  # Safe operation patterns
+  safe_operations:
+    - "test_addition"
+    - "documentation_update"
+    - "bug_fixes"
+    - "performance_optimization"
+    - "security_hardening"
+
+compliance:
+  audit_trail: true
+  approval_logging: true
+  scope_verification: true
+  
+execution_boundaries:
+  # Time limits for autonomous operation
+  max_session_duration: "2 hours"
+  max_files_modified: 50
+  max_lines_changed: 5000
+  
+  # Quality gates
+  required_tests: true
+  required_lint_pass: true
+  required_security_scan: true
+
+approved_targets:
+  # No external targets currently approved
+  # Format: target_id: { repo: "org/repo", branch: "main", operations: ["read", "write"] }
+  
+human_oversight:
+  escalation_triggers:
+    - "scope_exceeded"
+    - "high_risk_operation"
+    - "approval_required"
+    - "unknown_target"
+    - "security_concern"
+    
+  contact_method: "pause_execution"
+  approval_timeout: "24 hours"
