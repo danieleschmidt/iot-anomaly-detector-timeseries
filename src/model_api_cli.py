@@ -7,12 +7,12 @@ import os
 from pathlib import Path
 
 try:
-    from .model_serving_api import start_server, FASTAPI_AVAILABLE
+    from .model_serving_api import FASTAPI_AVAILABLE
     from .logging_config import get_logger
 except ImportError:
     # Handle imports when running as standalone module
     sys.path.append(os.path.dirname(__file__))
-    from model_serving_api import start_server, FASTAPI_AVAILABLE
+    from model_serving_api import FASTAPI_AVAILABLE
     from logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -56,7 +56,7 @@ Examples:
                              help='Enable auto-reload for development')
     
     # Check dependencies command
-    check_parser = subparsers.add_parser('check', help='Check API dependencies')
+    subparsers.add_parser('check', help='Check API dependencies')
     
     # Status command
     status_parser = subparsers.add_parser('status', help='Check server status')
@@ -115,9 +115,9 @@ def start_server_command(args):
         if args.model:
             success = model_server.load_model(args.model)
             if success:
-                print(f"✅ Model loaded successfully")
+                print("✅ Model loaded successfully")
             else:
-                print(f"⚠️  Warning: Failed to load model, server will start without model")
+                print("⚠️  Warning: Failed to load model, server will start without model")
         
         # Start the server
         uvicorn.run(
@@ -179,7 +179,7 @@ def check_server_status(url: str):
         
         if response.status_code == 200:
             data = response.json()
-            print(f"✅ Server is running")
+            print("✅ Server is running")
             print(f"   Status: {data.get('status')}")
             print(f"   Version: {data.get('version')}")
             print(f"   Model loaded: {data.get('model_loaded')}")
@@ -205,7 +205,6 @@ def test_api_endpoints(url: str):
     
     try:
         import requests
-        import json
         
         # Test health endpoint
         print("\n1. Testing health endpoint...")

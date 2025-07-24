@@ -6,7 +6,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Dict, List, Callable, Optional, Any, Union
+from typing import Dict, List, Callable, Optional, Any
 import numpy as np
 import pandas as pd
 from tensorflow.keras.models import load_model

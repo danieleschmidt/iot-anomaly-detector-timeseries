@@ -2,11 +2,9 @@
 """Command-line interface for performance monitoring and metrics analysis."""
 
 import argparse
-import json
 import sys
 import time
 from pathlib import Path
-from typing import Dict, Any
 
 from .logging_config import get_performance_metrics, get_logger
 
@@ -52,7 +50,7 @@ class PerformanceMonitorCLI:
                 # Memory metrics
                 if 'memory' in stats:
                     memory = stats['memory']
-                    print(f"💾 Memory Usage:")
+                    print("💾 Memory Usage:")
                     print(f"   RSS: {memory['current_rss_mb']:.1f} MB")
                     print(f"   VMS: {memory['current_vms_mb']:.1f} MB")
                     print(f"   Percent: {memory['current_percent']:.1f}%")
@@ -60,7 +58,7 @@ class PerformanceMonitorCLI:
                 # GPU metrics
                 if 'gpu' in stats:
                     gpu = stats['gpu']
-                    print(f"🎮 GPU Status:")
+                    print("🎮 GPU Status:")
                     print(f"   Utilization: {gpu['utilization_percent']:.1f}%")
                     print(f"   Memory: {gpu['memory_used_mb']:.0f}/{gpu.get('memory_total_mb', 0):.0f} MB ({gpu['memory_percent']:.1f}%)")
                     print(f"   Temperature: {gpu['temperature_c']:.1f}°C")
@@ -68,7 +66,7 @@ class PerformanceMonitorCLI:
                 # Timing statistics
                 if 'timing' in stats:
                     timing = stats['timing']
-                    print(f"⏱️  Operation Timing:")
+                    print("⏱️  Operation Timing:")
                     print(f"   Count: {timing['count']}")
                     print(f"   Avg: {timing['avg']:.3f}s")
                     print(f"   Min: {timing['min']:.3f}s")
@@ -77,7 +75,7 @@ class PerformanceMonitorCLI:
                 
                 # Counters
                 if 'counters' in stats and stats['counters']:
-                    print(f"🔢 Counters:")
+                    print("🔢 Counters:")
                     for name, count in sorted(stats['counters'].items()):
                         if count > 0:
                             print(f"   {name}: {count}")
@@ -116,7 +114,7 @@ class PerformanceMonitorCLI:
         # Timing stats
         if 'timing' in stats:
             timing = stats['timing']
-            print(f"\n⏱️  Timing Statistics:")
+            print("\n⏱️  Timing Statistics:")
             print(f"   Operations: {timing['count']}")
             print(f"   Average: {timing['avg']:.3f}s")
             print(f"   Min: {timing['min']:.3f}s")
@@ -130,7 +128,7 @@ class PerformanceMonitorCLI:
         # Memory stats
         if 'memory' in stats:
             memory = stats['memory']
-            print(f"\n💾 Current Memory Usage:")
+            print("\n💾 Current Memory Usage:")
             print(f"   RSS: {memory['current_rss_mb']:.1f} MB")
             print(f"   VMS: {memory['current_vms_mb']:.1f} MB")
             print(f"   Percent: {memory['current_percent']:.1f}%")
@@ -138,7 +136,7 @@ class PerformanceMonitorCLI:
         # GPU stats
         if 'gpu' in stats:
             gpu = stats['gpu']
-            print(f"\n🎮 Current GPU Status:")
+            print("\n🎮 Current GPU Status:")
             print(f"   Utilization: {gpu['utilization_percent']:.1f}%")
             print(f"   Memory Used: {gpu['memory_used_mb']:.0f} MB")
             print(f"   Memory Percent: {gpu['memory_percent']:.1f}%")
@@ -146,7 +144,7 @@ class PerformanceMonitorCLI:
         
         # Counters
         if 'counters' in stats and stats['counters']:
-            print(f"\n🔢 Counters:")
+            print("\n🔢 Counters:")
             for name, count in sorted(stats['counters'].items()):
                 if count > 0:
                     print(f"   {name}: {count:,}")
@@ -251,7 +249,7 @@ class PerformanceMonitorCLI:
             print("✅ No performance issues detected")
         
         if recommendations:
-            print(f"\n💡 Recommendations:")
+            print("\n💡 Recommendations:")
             for rec in recommendations:
                 print(f"   • {rec}")
         

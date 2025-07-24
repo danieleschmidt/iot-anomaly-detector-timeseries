@@ -5,15 +5,11 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Dict, Any
 
 from .flexible_autoencoder import (
     get_predefined_architectures,
-    validate_architecture_config,
-    save_architecture_config,
     load_architecture_config,
-    create_autoencoder_from_config,
-    FlexibleAutoencoderBuilder
+    create_autoencoder_from_config
 )
 
 
@@ -37,7 +33,7 @@ def list_architectures(args):
         print(f"  Encoder Layers: {num_layers}")
         
         if args.verbose:
-            print(f"  Layers:")
+            print("  Layers:")
             for i, layer in enumerate(config.get('encoder_layers', [])):
                 layer_type = layer.get('type', 'unknown')
                 layer_params = {k: v for k, v in layer.items() if k != 'type'}
@@ -155,13 +151,13 @@ def test_architecture(args):
     try:
         # Load and validate configuration
         config = load_architecture_config(config_path)
-        print(f"✓ Configuration loaded successfully.")
+        print("✓ Configuration loaded successfully.")
         
         # Test building the model
         model = create_autoencoder_from_config(config)
         
         if model is not None:
-            print(f"✓ Model built successfully!")
+            print("✓ Model built successfully!")
             print(f"  - Total parameters: {model.count_params():,}")
             print(f"  - Input shape: {config['input_shape']}")
             print(f"  - Latent dimension: {config['latent_config']['dim']}")
@@ -195,7 +191,7 @@ def compare_architectures(args):
         config2 = load_architecture_config(args.arch2)
         source2 = f"file ({args.arch2})"
     
-    print(f"Comparing architectures:")
+    print("Comparing architectures:")
     print(f"  Architecture 1: {source1}")
     print(f"  Architecture 2: {source2}")
     print("=" * 60)
@@ -210,7 +206,7 @@ def compare_architectures(args):
     layers1 = [layer.get('type') for layer in config1.get('encoder_layers', [])]
     layers2 = [layer.get('type') for layer in config2.get('encoder_layers', [])]
     
-    print(f"\\nLayer Types:")
+    print("\\nLayer Types:")
     print(f"  Architecture 1: {' -> '.join(layers1)}")
     print(f"  Architecture 2: {' -> '.join(layers2)}")
     
@@ -218,15 +214,15 @@ def compare_architectures(args):
     comp1 = config1.get('compilation', {})
     comp2 = config2.get('compilation', {})
     
-    print(f"\\nCompilation:")
+    print("\\nCompilation:")
     print(f"  Optimizer: {comp1.get('optimizer')} vs {comp2.get('optimizer')}")
     print(f"  Loss: {comp1.get('loss')} vs {comp2.get('loss')}")
     
     if args.verbose:
-        print(f"\\nFull Configurations:")
-        print(f"\\nArchitecture 1:")
+        print("\\nFull Configurations:")
+        print("\\nArchitecture 1:")
         print(json.dumps(config1, indent=2))
-        print(f"\\nArchitecture 2:")
+        print("\\nArchitecture 2:")
         print(json.dumps(config2, indent=2))
 
 

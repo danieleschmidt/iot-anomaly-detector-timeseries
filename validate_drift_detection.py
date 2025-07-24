@@ -11,7 +11,6 @@ import time
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from datetime import datetime, timedelta
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -201,7 +200,7 @@ def test_drift_monitoring_workflow():
     
     # Analyze monitoring summary
     summary = detector.get_drift_summary()
-    print(f"\n📈 MONITORING SUMMARY:")
+    print("\n📈 MONITORING SUMMARY:")
     print(f"   Total detections: {summary['total_detections']}")
     print(f"   Drift rate: {summary['drift_rate']:.1%}")
     print(f"   Most drifted feature: {summary.get('most_drifted_feature', 'None')}")
@@ -543,7 +542,7 @@ def demonstrate_real_world_scenario():
     
     # Show monitoring summary
     summary = detector.get_drift_summary()
-    print(f"\n📈 MONITORING SUMMARY:")
+    print("\n📈 MONITORING SUMMARY:")
     print(f"Total Scenarios Tested: {summary['total_detections']}")
     print(f"Drift Detection Rate: {summary['drift_rate']:.1%}")
     print(f"Most Sensitive Sensor: {summary.get('most_drifted_feature', 'None')}")

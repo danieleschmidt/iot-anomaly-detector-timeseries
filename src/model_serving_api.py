@@ -3,12 +3,10 @@ Model Serving REST API for IoT Anomaly Detection.
 FastAPI implementation with health checks, versioning, and comprehensive endpoints.
 """
 import time
-import logging
 import traceback
 from datetime import datetime
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional
 from pathlib import Path
-import asyncio
 
 try:
     from fastapi import FastAPI, HTTPException, Request, status
@@ -185,7 +183,6 @@ class ModelServer:
         
         try:
             # Convert data to the format expected by AnomalyDetector
-            import numpy as np
             import pandas as pd
             
             # Create DataFrame from input data

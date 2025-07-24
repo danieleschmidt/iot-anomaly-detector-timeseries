@@ -91,7 +91,6 @@ def test_predict_integration():
     """Test integration with predict method."""
     try:
         from anomaly_detector import AnomalyDetector
-        from data_preprocessor import DataPreprocessor
         
         # Mock preprocessor and model
         with patch('anomaly_detector.load_model') as mock_load, \

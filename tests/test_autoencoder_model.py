@@ -3,12 +3,11 @@
 import pytest
 import numpy as np
 from unittest.mock import patch, MagicMock
-import sys
 
 # Handle TensorFlow import gracefully for testing environments without TensorFlow
 try:
     import tensorflow as tf
-    from tensorflow.keras import layers, models, Model
+    from tensorflow.keras import Model
     TF_AVAILABLE = True
 except ImportError:
     TF_AVAILABLE = False

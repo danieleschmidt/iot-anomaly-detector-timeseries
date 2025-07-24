@@ -102,8 +102,7 @@ def evaluate(
         from sklearn.metrics import (
             precision_recall_fscore_support,
             roc_auc_score,
-            confusion_matrix,
-            classification_report
+            confusion_matrix
         )
 
         logger.info(f"Loading ground truth labels from {labels_path}")
@@ -186,7 +185,7 @@ def evaluate(
                     
                     # Save updated metadata
                     metadata_manager.save_metadata(metadata, str(metadata_path))
-                    logger.info(f"Updated model metadata with evaluation results")
+                    logger.info("Updated model metadata with evaluation results")
         except Exception as e:
             logger.warning(f"Could not update model metadata: {e}")
 

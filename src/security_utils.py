@@ -7,7 +7,7 @@ import re
 import json
 import hashlib
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,19 +35,27 @@ def sanitize_path(file_path: str) -> str:
     # Convert to Path object and resolve to remove .. sequences
     path = Path(file_path)
     
-    # Remove any parent directory references
+    # Check if original was absolute
+    was_absolute = path.is_absolute()
+    
+    # Remove any parent directory references but preserve legitimate parts
     parts = []
     for part in path.parts:
-        if part == '..' or part == '.' or part.startswith('.'):
-            continue
+        if part == '..' or part == '.':
+            continue  # Skip traversal attempts
+        if part.startswith('.') and part not in {'.gitignore', '.env'}:
+            continue  # Skip hidden files except common legitimate ones
         parts.append(part)
     
     # Reconstruct path without dangerous components
-    sanitized = str(Path(*parts)) if parts else ''
-    
-    # Ensure it's not an absolute path
-    if os.path.isabs(sanitized):
-        sanitized = sanitized.lstrip(os.sep)
+    if not parts:
+        return ''
+        
+    # Preserve absolute path nature for legitimate absolute paths
+    if was_absolute and parts[0] != '/':
+        sanitized = str(Path('/', *parts))
+    else:
+        sanitized = str(Path(*parts))
     
     return sanitized
 

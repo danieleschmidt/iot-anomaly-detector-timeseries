@@ -6,9 +6,6 @@ import pytest
 import tempfile
 import os
 import json
-import pickle
-from pathlib import Path
-from unittest.mock import patch, mock_open
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
@@ -169,7 +166,7 @@ class TestFileSizeValidation:
             f.flush()
             
             try:
-                assert validate_file_size(f.name, max_size_mb=1.0) == True
+                assert validate_file_size(f.name, max_size_mb=1.0)
             finally:
                 os.unlink(f.name)
     

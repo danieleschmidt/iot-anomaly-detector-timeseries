@@ -1,7 +1,4 @@
 import pytest
-import os
-import tempfile
-from pathlib import Path
 from src.config import Config
 
 
@@ -130,7 +127,7 @@ batch_size: 16
 
 def test_config_invalid_file():
     """Test handling of invalid configuration file."""
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError, match="File does not exist"):
         Config("nonexistent_config.yaml")
 
 

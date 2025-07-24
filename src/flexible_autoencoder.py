@@ -7,7 +7,6 @@ with configurable layers, activation functions, and compilation options.
 import json
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional, Union
-import logging
 
 try:
     from tensorflow.keras import layers, models, losses, optimizers, regularizers

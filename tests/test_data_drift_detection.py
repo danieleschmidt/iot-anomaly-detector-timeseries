@@ -1,16 +1,10 @@
 import unittest
 import numpy as np
 import pandas as pd
-from unittest.mock import Mock, patch, MagicMock
 import time
-from pathlib import Path
-import sys
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
-from data_drift_detector import DataDriftDetector, DriftDetectionConfig, DriftResult, DriftAlert
+from src.data_drift_detector import DataDriftDetector, DriftDetectionConfig, DriftResult, DriftAlert
 
 
 class TestDriftDetectionConfig(unittest.TestCase):

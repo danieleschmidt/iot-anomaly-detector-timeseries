@@ -5,10 +5,9 @@ import numpy as np
 import tempfile
 import shutil
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 import time
 import psutil
-import os
 
 from src.anomaly_detector import AnomalyDetector
 

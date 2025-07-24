@@ -6,13 +6,11 @@ import shutil
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 import pytest
-import sys
 import argparse
 
 from src.model_manager import (
     list_models, show_metadata, compare_models, cleanup_old_models, main
 )
-from src.model_metadata import ModelMetadata
 
 
 class TestModelManagerCLI:

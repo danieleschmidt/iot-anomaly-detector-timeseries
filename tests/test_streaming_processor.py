@@ -2,11 +2,7 @@
 
 import pytest
 import numpy as np
-import pandas as pd
-from unittest.mock import Mock, patch, MagicMock
-import queue
-import threading
-import time
+from unittest.mock import Mock, patch
 from pathlib import Path
 import tempfile
 import json
@@ -98,7 +94,7 @@ class TestStreamingProcessor:
     
     def test_window_creation_from_buffer(self):
         """Test window creation from streaming buffer."""
-        with patch('src.streaming_processor.load_model') as mock_load, \
+        with patch('src.streaming_processor.load_model'), \
              patch('src.streaming_processor.DataPreprocessor') as mock_dp_class:
             
             mock_dp_instance = Mock()
