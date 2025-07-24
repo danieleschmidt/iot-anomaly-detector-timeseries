@@ -527,7 +527,7 @@ class TestValidationReport:
         )
         
         output_path = tmp_path / "validation_report.md"
-        report = create_validation_report(result, str(output_path))
+        create_validation_report(result, str(output_path))
         
         assert output_path.exists()
         assert "✅ PASSED" in output_path.read_text()

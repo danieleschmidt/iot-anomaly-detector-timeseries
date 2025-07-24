@@ -4,11 +4,9 @@ Provides SHAP integration, attention visualization, and feature importance analy
 """
 import numpy as np
 import pandas as pd
-import logging
-from typing import List, Dict, Any, Optional, Union, Tuple
+from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 import time
-from pathlib import Path
 
 # Optional dependencies with graceful fallbacks
 try:
@@ -197,7 +195,7 @@ class ModelExplainer:
         Returns:
             ExplanationResult containing the explanation
         """
-        start_time = time.time()
+        time.time()
         
         if method == 'shap':
             return self._explain_instance_shap(instance_data, **kwargs)

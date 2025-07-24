@@ -10,7 +10,7 @@ import threading
 import time
 from collections import deque, defaultdict
 from pathlib import Path
-from typing import Optional, Dict, Any, List, Callable
+from typing import Optional, Dict, Any
 
 from .config import get_config
 
@@ -27,7 +27,7 @@ class SensitiveDataFilter(logging.Filter):
         (re.compile(r'://[^:]+:[^@]+@', re.IGNORECASE), '://user:***@'),  # DB connection strings
         # Additional security patterns
         (re.compile(r'/home/[^/\s]+', re.IGNORECASE), '/home/[USER]'),  # Home directories
-        (re.compile(r'\\Users\\[^\\s]+', re.IGNORECASE), '\\Users\\[USER]'),  # Windows user dirs
+        (re.compile(r'\\\\Users\\\\[^\\\\s]+', re.IGNORECASE), r'\\Users\\[USER]'),  # Windows user dirs
         (re.compile(r'/[^\s]*(?:/[^\s]*){3,}', re.IGNORECASE), '[PATH_REDACTED]'),  # Long paths
         (re.compile(r'[A-Z]:\\[^\s]*(?:\\[^\s]*){2,}', re.IGNORECASE), '[PATH_REDACTED]'),  # Windows paths
         (re.compile(r'auth[=:\s]+[^\s]+', re.IGNORECASE), 'auth=***'),
@@ -148,7 +148,7 @@ def setup_logging_from_config() -> None:
     """Set up logging using configuration from config system and environment."""
     
     # Get configuration values
-    config = get_config()
+    get_config()
     
     # Check for environment overrides
     log_level = os.getenv("IOT_LOG_LEVEL", "INFO")

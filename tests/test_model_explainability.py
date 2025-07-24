@@ -3,7 +3,6 @@ Test cases for Model Explainability Tools.
 Tests SHAP integration, attention visualization, and feature importance.
 """
 import pytest
-import tempfile
 import os
 import numpy as np
 from unittest.mock import patch, MagicMock
@@ -18,7 +17,7 @@ except ImportError:
     SHAP_AVAILABLE = False
     shap = MagicMock()
 
-from model_explainability import (
+from src.model_explainability import (
     ModelExplainer,
     FeatureImportanceAnalyzer,
     AttentionVisualizer,
@@ -186,7 +185,7 @@ class TestAttentionVisualizer:
         attention_weights = np.random.randn(10, 10)
         
         with patch('model_explainability.plt') as mock_plt:
-            fig = visualizer.visualize_attention_heatmap(attention_weights)
+            visualizer.visualize_attention_heatmap(attention_weights)
             
             # Verify matplotlib functions were called
             mock_plt.figure.assert_called()
@@ -245,7 +244,7 @@ class TestExplanationResult:
         )
         
         with patch('model_explainability.plt') as mock_plt:
-            fig = result.plot_feature_importance()
+            result.plot_feature_importance()
             
             # Verify plotting functions were called
             mock_plt.figure.assert_called()

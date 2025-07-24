@@ -1,7 +1,4 @@
 import pytest
-import unittest.mock
-import tempfile
-from pathlib import Path
 
 pytest.importorskip("tensorflow")
 

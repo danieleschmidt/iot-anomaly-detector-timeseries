@@ -1,9 +1,7 @@
 """Custom training callbacks for progress indication and monitoring."""
 
 import time
-import logging
 from typing import Dict, Any, Optional
-import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
 
 from .logging_config import get_logger

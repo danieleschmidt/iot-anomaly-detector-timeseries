@@ -9,14 +9,13 @@ anomaly detection system and demonstrates performance improvements.
 import sys
 import time
 import numpy as np
-import pandas as pd
 from pathlib import Path
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 try:
-    from src.caching_strategy import CacheManager, cache_preprocessing, get_cache_stats, clear_all_caches
+    from src.caching_strategy import CacheManager, get_cache_stats, clear_all_caches
     from src.data_preprocessor import DataPreprocessor
     print("✅ Successfully imported caching modules")
 except ImportError as e:
@@ -235,7 +234,7 @@ def demonstrate_performance_benefits():
     
     for i, window_size in enumerate(window_sizes):
         start_time = time.time()
-        windows = preprocessor.create_windows(large_data, window_size=window_size, step=1)
+        preprocessor.create_windows(large_data, window_size=window_size, step=1)
         elapsed = time.time() - start_time
         times.append(elapsed)
         

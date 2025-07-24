@@ -2,15 +2,9 @@
 
 import pytest
 import numpy as np
-import sys
-from pathlib import Path
-from unittest.mock import Mock, patch
-import tempfile
+from unittest.mock import Mock
 
-# Add src to path for testing
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
-
-from data_preprocessor import DataPreprocessor
+from src.data_preprocessor import DataPreprocessor
 
 
 class TestMemoryEfficientWindows:

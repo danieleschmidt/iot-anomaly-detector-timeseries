@@ -3,10 +3,7 @@ Test cases for Model Serving REST API.
 Tests FastAPI endpoints, health checks, and versioning.
 """
 import pytest
-import json
-import tempfile
 import os
-from pathlib import Path
 from unittest.mock import patch, MagicMock
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -166,7 +163,7 @@ class TestModelServer:
     
     def test_model_server_initialization(self):
         """Test ModelServer initialization."""
-        with patch('model_serving_api.AnomalyDetector') as mock_detector:
+        with patch('model_serving_api.AnomalyDetector'):
             server = ModelServer()
             assert server is not None
     
@@ -194,7 +191,7 @@ class TestModelServer:
     
     def test_predict_with_loaded_model(self):
         """Test prediction with loaded model."""
-        with patch('model_serving_api.AnomalyDetector') as mock_detector:
+        with patch('model_serving_api.AnomalyDetector'):
             server = ModelServer()
             
             # Mock model methods
@@ -222,7 +219,7 @@ class TestModelServer:
     
     def test_get_model_info(self):
         """Test getting model information."""
-        with patch('model_serving_api.AnomalyDetector') as mock_detector:
+        with patch('model_serving_api.AnomalyDetector'):
             server = ModelServer()
             
             # Mock model with metadata

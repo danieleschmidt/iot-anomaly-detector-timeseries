@@ -1,8 +1,6 @@
-import pytest
 import logging
 import tempfile
 import os
-from pathlib import Path
 from unittest.mock import patch
 from src.logging_config import setup_logging, get_logger
 
@@ -124,7 +122,7 @@ def test_logger_hierarchy():
     """Test that logger hierarchy works correctly."""
     setup_logging(level="DEBUG")
     
-    parent_logger = get_logger("parent")
+    get_logger("parent")
     child_logger = get_logger("parent.child")
     
     # Child should inherit from parent

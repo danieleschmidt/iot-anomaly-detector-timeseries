@@ -8,7 +8,6 @@ import pandas as pd
 import numpy as np
 from typing import Dict, List, Optional, Tuple, Any, Union
 from pathlib import Path
-import warnings
 from dataclasses import dataclass
 from enum import Enum
 
@@ -329,7 +328,7 @@ class DataValidator:
                 try:
                     fixed_df[col] = pd.to_numeric(fixed_df[col], errors='coerce')
                     fixes_applied.append(f"Converted column '{col}' to numeric")
-                except:
+                except (ValueError, TypeError):
                     continue
         
         # Handle missing values
@@ -430,7 +429,7 @@ class DataValidator:
                     },
                     "time_monotonic": time_series.is_monotonic_increasing
                 })
-            except:
+            except (ValueError, TypeError, AttributeError):
                 pass
         
         return ValidationResult(is_valid, errors, warnings, fixed_issues, summary)
@@ -748,7 +747,7 @@ Examples:
             print(f"💾 Validated data saved to: {args.output}")
         
         if args.report:
-            report_text = create_validation_report(result, args.report)
+            create_validation_report(result, args.report)
             print(f"📄 Validation report saved to: {args.report}")
         
         if args.json_summary:
@@ -772,7 +771,7 @@ Examples:
         if not result.is_valid:
             print(f"\n❌ Validation failed with {len(result.errors)} errors")
         else:
-            print(f"\n✅ Validation completed successfully")
+            print("\n✅ Validation completed successfully")
         
         return exit_code
         

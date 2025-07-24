@@ -5,10 +5,9 @@ import hashlib
 import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional
-import logging
 
 from .logging_config import get_logger
-from .security_utils import validate_file_path, secure_json_load, sanitize_error_message, validate_file_size
+from .security_utils import validate_file_path, secure_json_load, sanitize_error_message
 
 
 class ModelMetadata:

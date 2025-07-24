@@ -2,11 +2,9 @@
 """Command-line interface for streaming anomaly detection."""
 
 import argparse
-import json
 import signal
 import sys
 import time
-from pathlib import Path
 from typing import Dict, Any
 
 from .streaming_processor import StreamingProcessor, StreamingConfig
@@ -207,7 +205,7 @@ Examples:
             # Add anomaly callback
             self.processor.add_anomaly_callback(self.anomaly_callback)
             
-            print(f"🚀 Streaming processor initialized")
+            print("🚀 Streaming processor initialized")
             print(f"📊 Config: Window={config.window_size}, Threshold={config.anomaly_threshold}")
             
             # Run based on mode
@@ -258,7 +256,7 @@ Examples:
             
             # Final detection
             print("🔍 Running final anomaly detection...")
-            final_result = self.processor.detect_anomalies()
+            self.processor.detect_anomalies()
             
             # Stop streaming
             self.processor.stop_streaming()

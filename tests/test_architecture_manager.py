@@ -6,7 +6,6 @@ import shutil
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 import pytest
-import sys
 import argparse
 
 from src.architecture_manager import (

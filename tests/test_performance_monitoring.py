@@ -4,14 +4,10 @@ import pytest
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import json
-import sys
 
-# Add src to path for testing
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
-
-from logging_config import (
+from src.logging_config import (
     PerformanceMetrics, 
     get_performance_metrics, 
     performance_monitor,
@@ -286,7 +282,7 @@ class TestPerformanceDecorator:
         """Test decorator with memory tracking."""
         metrics = PerformanceMetrics()
         
-        with patch('psutil.Process') as mock_process_class:
+        with patch('psutil.Process'):
             mock_process = Mock()
             mock_memory_info = Mock()
             mock_memory_info.rss = 50 * 1024 * 1024
@@ -352,7 +348,7 @@ class TestPerformanceMonitorContext:
         """Test context manager with memory tracking."""
         metrics = PerformanceMetrics()
         
-        with patch('psutil.Process') as mock_process_class:
+        with patch('psutil.Process'):
             mock_process = Mock()
             mock_memory_info = Mock()
             mock_memory_info.rss = 75 * 1024 * 1024
@@ -458,7 +454,7 @@ class TestPerformanceIntegration:
             # Execute workflow
             data = load_data()
             processed_data = preprocess_data(data)
-            results = run_inference(processed_data)
+            run_inference(processed_data)
             
             # Add custom metrics
             metrics.record_custom_metric("accuracy", 0.95, "evaluation")

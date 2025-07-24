@@ -25,7 +25,7 @@ class AnomalyDetector:
         try:
             self.logger.info(f"Loading autoencoder model from {model_path}")
             self.model = load_model(model_path)
-            self.logger.info(f"Model loaded successfully")
+            self.logger.info("Model loaded successfully")
         except Exception as e:
             self.logger.error(f"Failed to load model from {model_path}: {e}")
             raise ValueError(f"Unable to load model from {model_path}: {e}") from e

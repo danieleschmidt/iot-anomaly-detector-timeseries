@@ -11,7 +11,7 @@ import json
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
 try:
-    from streaming_processor import StreamingProcessor, StreamingConfig
+    from streaming_processor import StreamingConfig
     print("✅ StreamingProcessor imported successfully")
 except ImportError as e:
     print(f"❌ Failed to import StreamingProcessor: {e}")

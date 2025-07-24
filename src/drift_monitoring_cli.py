@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Optional
 
 from .data_drift_detector import (
     DataDriftDetector, 
@@ -109,7 +109,7 @@ def monitor_drift_continuously(
     output_dir : str, optional
         Directory to save monitoring results
     """
-    print(f"🔍 Starting continuous drift monitoring...")
+    print("🔍 Starting continuous drift monitoring...")
     print(f"📊 Data source: {data_source}")
     print(f"⏱️  Check interval: {interval_minutes} minutes")
     print(f"⏰ Duration: {duration_hours} hours")
@@ -185,7 +185,7 @@ def monitor_drift_continuously(
     
     # Final summary
     total_time = datetime.now() - start_time
-    print(f"\n📊 FINAL MONITORING SUMMARY:")
+    print("\n📊 FINAL MONITORING SUMMARY:")
     print(f"   Duration: {total_time}")
     print(f"   Total checks: {check_count}")
     print(f"   Drift alerts: {drift_alerts}")
@@ -274,7 +274,7 @@ def analyze_drift_trends(
                     feature_drift_counts[feature] = feature_drift_counts.get(feature, 0) + 1
         
         if feature_drift_counts:
-            print(f"\n📊 FEATURE DRIFT FREQUENCY:")
+            print("\n📊 FEATURE DRIFT FREQUENCY:")
             sorted_features = sorted(feature_drift_counts.items(), key=lambda x: x[1], reverse=True)
             
             for feature, count in sorted_features[:10]:  # Top 10
@@ -289,7 +289,7 @@ def analyze_drift_trends(
         
         if hour_counts:
             peak_hour = max(hour_counts.items(), key=lambda x: x[1])
-            print(f"\n⏰ TEMPORAL PATTERNS:")
+            print("\n⏰ TEMPORAL PATTERNS:")
             print(f"   Peak drift hour:     {peak_hour[0]:02d}:00 ({peak_hour[1]} detections)")
         
         # Severity analysis
@@ -306,7 +306,7 @@ def analyze_drift_trends(
             else:
                 severity_counts['low'] += 1
         
-        print(f"\n🚨 SEVERITY DISTRIBUTION:")
+        print("\n🚨 SEVERITY DISTRIBUTION:")
         for severity, count in severity_counts.items():
             rate = count / total_checks
             print(f"   {severity.capitalize():8} {count:3d} ({rate:.1%})")
@@ -355,7 +355,7 @@ def setup_drift_monitoring(
     DataDriftDetector
         Configured drift detector
     """
-    print(f"⚙️  Setting up drift detector...")
+    print("⚙️  Setting up drift detector...")
     
     # Load configuration if provided
     config = DriftDetectionConfig()
@@ -373,7 +373,7 @@ def setup_drift_monitoring(
     # Create detector
     try:
         detector = create_drift_detector_from_training_data(training_data_path, config)
-        print(f"✅ Drift detector ready!")
+        print("✅ Drift detector ready!")
         print(f"   Training data: {training_data_path}")
         print(f"   Reference samples: {len(detector.reference_data)}")
         print(f"   Features: {list(detector.reference_data.columns)}")

@@ -7,19 +7,15 @@ import os
 import json
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any
 
 try:
-    from .model_explainability import ModelExplainer, FeatureImportanceAnalyzer, explain_model_prediction
-    from .anomaly_detector import AnomalyDetector
+    # CLI module - imports available for future functionality
     from .logging_config import get_logger
     from .security_utils import sanitize_error_message
 except ImportError:
     # Handle imports when running as standalone module
     sys.path.append(os.path.dirname(__file__))
-    from model_explainability import ModelExplainer, FeatureImportanceAnalyzer, explain_model_prediction
-    from anomaly_detector import AnomalyDetector
     from logging_config import get_logger
     from security_utils import sanitize_error_message
 

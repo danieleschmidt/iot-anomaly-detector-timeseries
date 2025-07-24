@@ -39,7 +39,7 @@ class TestFlexibleAutoencoderBuilder:
         layer_config = builder.encoder_layers[0]
         assert layer_config['type'] == 'lstm'
         assert layer_config['units'] == 64
-        assert layer_config['return_sequences'] == True
+        assert layer_config['return_sequences']
         assert layer_config['dropout'] == 0.2
     
     def test_add_gru_encoder_layer(self):
@@ -51,7 +51,7 @@ class TestFlexibleAutoencoderBuilder:
         layer_config = builder.encoder_layers[0]
         assert layer_config['type'] == 'gru'
         assert layer_config['units'] == 32
-        assert layer_config['return_sequences'] == False
+        assert not layer_config['return_sequences']
         assert layer_config['recurrent_dropout'] == 0.1
     
     def test_add_dense_layer(self):
@@ -64,7 +64,7 @@ class TestFlexibleAutoencoderBuilder:
         assert layer_config['type'] == 'dense'
         assert layer_config['units'] == 128
         assert layer_config['activation'] == 'relu'
-        assert layer_config['use_bias'] == True
+        assert layer_config['use_bias']
     
     def test_add_conv1d_layer(self):
         """Test adding Conv1D layers."""
@@ -150,7 +150,7 @@ class TestFlexibleAutoencoderBuilder:
         mock_models.Model.return_value = mock_model
         
         # Build model
-        model = builder.build()
+        builder.build()
         
         # Verify calls
         mock_layers.Input.assert_called_once_with(shape=(30, 3))
@@ -184,13 +184,13 @@ class TestFlexibleAutoencoderBuilder:
         # Valid architecture
         builder.add_encoder_layer('lstm', units=64, return_sequences=True)
         builder.add_encoder_layer('lstm', units=32, return_sequences=False)
-        assert builder.validate_architecture() == True
+        assert builder.validate_architecture()
         
         # Invalid: all LSTM layers have return_sequences=False
         builder_invalid = FlexibleAutoencoderBuilder(input_shape=(30, 3))
         builder_invalid.add_encoder_layer('lstm', units=64, return_sequences=False)
         builder_invalid.add_encoder_layer('lstm', units=32, return_sequences=False)
-        assert builder_invalid.validate_architecture() == False
+        assert not builder_invalid.validate_architecture()
 
 
 class TestArchitectureConfig:
@@ -213,7 +213,7 @@ class TestArchitectureConfig:
             }
         }
         
-        assert validate_architecture_config(config) == True
+        assert validate_architecture_config(config)
     
     def test_validate_architecture_config_invalid(self):
         """Test validation of invalid architecture config."""
@@ -224,7 +224,7 @@ class TestArchitectureConfig:
             ]
         }
         
-        assert validate_architecture_config(config_missing) == False
+        assert not validate_architecture_config(config_missing)
         
         # Invalid layer type
         config_invalid_layer = {
@@ -236,7 +236,7 @@ class TestArchitectureConfig:
             "compilation": {"optimizer": "adam", "loss": "mse"}
         }
         
-        assert validate_architecture_config(config_invalid_layer) == False
+        assert not validate_architecture_config(config_invalid_layer)
     
     @patch('src.flexible_autoencoder.FlexibleAutoencoderBuilder')
     def test_create_autoencoder_from_config(self, mock_builder_class):
@@ -283,7 +283,7 @@ class TestArchitectureConfig:
             assert 'encoder_layers' in config
             assert 'latent_config' in config
             assert 'compilation' in config
-            assert validate_architecture_config(config) == True
+            assert validate_architecture_config(config)
 
 
 class TestArchitectureIntegration:
@@ -318,7 +318,7 @@ class TestArchitectureIntegration:
             loaded_config = json.load(f)
         
         assert loaded_config == config
-        assert validate_architecture_config(loaded_config) == True
+        assert validate_architecture_config(loaded_config)
     
     @patch('src.flexible_autoencoder.layers')
     @patch('src.flexible_autoencoder.models')
@@ -348,7 +348,7 @@ class TestArchitectureIntegration:
         builder.set_latent_config(dim=16, activation='linear')
         builder.set_compilation(optimizer='rmsprop', loss='mae', metrics=['mse'])
         
-        model = builder.build()
+        builder.build()
         
         # Verify complex architecture was built
         assert mock_layers.Conv1D.called

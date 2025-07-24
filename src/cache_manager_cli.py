@@ -9,7 +9,6 @@ performance monitoring, statistics reporting, and cache optimization.
 import argparse
 import json
 import time
-from pathlib import Path
 import sys
 from typing import Dict, Any
 
@@ -204,7 +203,7 @@ def monitor_cache(interval: int = 5, duration: int = 60) -> None:
             # Clear screen (works on most terminals)
             print("\033[2J\033[H")
             
-            print(f"REAL-TIME CACHE MONITORING")
+            print("REAL-TIME CACHE MONITORING")
             print(f"Elapsed: {time.time() - start_time:.1f}s / {duration}s")
             print(format_cache_stats(stats))
             
@@ -237,7 +236,7 @@ def benchmark_cache() -> None:
         
         start_time = time.time()
         for _ in range(3):
-            windows = preprocessor.create_windows(test_data, window_size=30, step=1)
+            preprocessor.create_windows(test_data, window_size=30, step=1)
         first_run_time = time.time() - start_time
         
         # Show results
@@ -297,7 +296,7 @@ def main():
     )
     
     # Benchmark command
-    benchmark_parser = subparsers.add_parser('benchmark', help='Run cache performance benchmark')
+    subparsers.add_parser('benchmark', help='Run cache performance benchmark')
     
     args = parser.parse_args()
     
