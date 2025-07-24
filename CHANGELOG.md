@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.0.11 - Security Improvements and Bug Fixes
+
+### Security
+- **Fixed MD5 usage in cache key generation** - Replaced MD5 with SHA-256 for security compliance
+  - Updated numpy array, pandas DataFrame, and Series hashing to use SHA-256
+  - Added `usedforsecurity=False` parameter for performance optimization
+  - All security scanner (bandit) issues resolved
+- **Enhanced cache key security test coverage** - Added test to verify secure hashing implementation
+
+### Fixed
+- Cache key generation now uses cryptographically secure SHA-256 instead of MD5
+- Improved security posture by eliminating weak hash algorithm usage
+- **Updated security tests** - Fixed test expectations to match improved path sanitization behavior
+  - Tests now correctly validate that traversal attempts are neutralized
+  - Improved test coverage for edge cases in path validation
+- **Dependency security updates** - Updated PyJWT to latest version (2.7.0 → 2.10.1)
+  - Created comprehensive dependency management guidelines
+  - Established safe update procedures for system-managed environments
+- **API security documentation** - Comprehensive security guidelines for network binding
+  - Documented secure deployment patterns for containers and cloud environments
+  - Added security annotations to address static analysis findings
+  - All security scanner issues resolved (0 findings)
+
 ## v0.0.10 - Advanced Performance Monitoring and Observability
 
 ### Added

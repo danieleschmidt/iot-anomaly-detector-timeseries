@@ -39,11 +39,11 @@ def generate_cache_key(*args, **kwargs) -> str:
     def serialize_arg(arg):
         """Serialize a single argument for hashing."""
         if isinstance(arg, np.ndarray):
-            return f"ndarray:{arg.shape}:{arg.dtype}:{hashlib.md5(arg.tobytes()).hexdigest()}"
+            return f"ndarray:{arg.shape}:{arg.dtype}:{hashlib.sha256(arg.tobytes(), usedforsecurity=False).hexdigest()}"
         elif isinstance(arg, pd.DataFrame):
-            return f"dataframe:{arg.shape}:{hashlib.md5(pd.util.hash_pandas_object(arg).values.tobytes()).hexdigest()}"
+            return f"dataframe:{arg.shape}:{hashlib.sha256(pd.util.hash_pandas_object(arg).values.tobytes(), usedforsecurity=False).hexdigest()}"
         elif isinstance(arg, pd.Series):
-            return f"series:{len(arg)}:{hashlib.md5(pd.util.hash_pandas_object(arg).values.tobytes()).hexdigest()}"
+            return f"series:{len(arg)}:{hashlib.sha256(pd.util.hash_pandas_object(arg).values.tobytes(), usedforsecurity=False).hexdigest()}"
         elif isinstance(arg, (list, tuple)):
             return f"{type(arg).__name__}:{[serialize_arg(item) for item in arg]}"
         elif isinstance(arg, dict):
@@ -59,7 +59,7 @@ def generate_cache_key(*args, **kwargs) -> str:
     combined = f"args:{serialized_args}|kwargs:{serialized_kwargs}"
     
     # Generate SHA-256 hash
-    return hashlib.sha256(combined.encode('utf-8')).hexdigest()
+    return hashlib.sha256(combined.encode('utf-8'), usedforsecurity=False).hexdigest()
 
 
 class CacheManager:
