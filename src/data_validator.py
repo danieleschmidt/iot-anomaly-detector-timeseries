@@ -160,7 +160,7 @@ class DataValidator:
         
         return ValidationResult(is_valid, errors, warnings, fixed_issues, summary)
     
-    def validate_schema(self, df: pd.DataFrame, expected_columns: Optional[List[str]] = None) -> ValidationResult:
+    def validate_schema(self, df: pd.DataFrame, expected_columns: Optional[List[str]] = None, time_column: Optional[str] = None) -> ValidationResult:
         """
         Validate DataFrame schema and structure.
         
@@ -170,6 +170,8 @@ class DataValidator:
             DataFrame to validate
         expected_columns : List[str], optional
             Expected column names
+        time_column : str, optional
+            Name of the time column to exclude from numeric checks
             
         Returns
         -------
@@ -205,6 +207,10 @@ class DataValidator:
         # Data type validation
         non_numeric_cols = []
         for col in df.columns:
+            # Skip time column from numeric checks
+            if time_column and col == time_column:
+                continue
+                
             if not pd.api.types.is_numeric_dtype(df[col]):
                 # Try to convert to numeric
                 try:
@@ -475,7 +481,7 @@ class DataValidator:
             return ValidationResult(False, [error_msg], [], [], {}), None
         
         # Schema validation
-        schema_result = self.validate_schema(df, expected_columns)
+        schema_result = self.validate_schema(df, expected_columns, time_column)
         
         # Data quality validation
         quality_result = self.validate_data_quality(df)

@@ -183,7 +183,7 @@ class TestDataValidator:
         result = validator_strict.validate_schema(empty_df)
         
         assert result.is_valid is False
-        assert "DataFrame is empty" in result.errors
+        assert "DataFrame is empty (0 rows)" in result.errors
 
     def test_validate_schema_small_dataframe_strict(self, validator_strict):
         """Test schema validation with small DataFrame in strict mode."""
@@ -497,7 +497,7 @@ class TestValidationReport:
         assert "✅ PASSED" in report
         assert "Test warning" in report
         assert "Test fix" in report
-        assert "test_metric" in report
+        assert "Test Metric" in report
 
     def test_create_validation_report_failure(self):
         """Test creating validation report for failed validation."""

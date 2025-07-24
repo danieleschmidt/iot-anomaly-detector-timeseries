@@ -140,39 +140,6 @@ def create_template(args):
     print("You can now edit this file to customize the architecture.")
 
 
-def test_architecture(args):
-    """Test building an architecture from configuration."""
-    config_path = Path(args.config_file)
-    
-    if not config_path.exists():
-        print(f"Error: Configuration file '{args.config_file}' not found.")
-        sys.exit(1)
-    
-    try:
-        # Load and validate configuration
-        config = load_architecture_config(config_path)
-        print("✓ Configuration loaded successfully.")
-        
-        # Test building the model
-        model = create_autoencoder_from_config(config)
-        
-        if model is not None:
-            print("✓ Model built successfully!")
-            print(f"  - Total parameters: {model.count_params():,}")
-            print(f"  - Input shape: {config['input_shape']}")
-            print(f"  - Latent dimension: {config['latent_config']['dim']}")
-            print(f"  - Number of layers: {len(model.layers)}")
-            
-            if args.verbose:
-                print("\\nModel summary:")
-                model.summary()
-        else:
-            print("✓ Model configuration is valid (TensorFlow not available for actual building)")
-            
-    except Exception as e:
-        print(f"✗ Error building model: {e}")
-        sys.exit(1)
-
 
 def compare_architectures(args):
     """Compare two architecture configurations."""
@@ -281,11 +248,6 @@ Examples:
     template_parser.add_argument("-a", "--architecture", 
                                 help="Base template on predefined architecture")
     template_parser.set_defaults(func=create_template)
-    
-    # Test command
-    test_parser = subparsers.add_parser("test", help="Test building model from configuration")
-    test_parser.add_argument("-c", "--config-file", required=True, help="Configuration file path")
-    test_parser.set_defaults(func=test_architecture)
     
     # Compare command
     compare_parser = subparsers.add_parser("compare", help="Compare two architectures")
