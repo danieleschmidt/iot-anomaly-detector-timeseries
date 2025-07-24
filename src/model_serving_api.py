@@ -457,7 +457,7 @@ else:
     logger.warning("FastAPI not available. API server cannot be started.")
 
 
-def start_server(host: str = "0.0.0.0", port: int = 8000, model_path: Optional[str] = None):
+def start_server(host: str = "0.0.0.0", port: int = 8000, model_path: Optional[str] = None):  # nosec B104
     """Start the API server.
     
     Args:
@@ -485,7 +485,7 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description="Start the IoT Anomaly Detection API server")
-    parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")
+    parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")  # nosec B104
     parser.add_argument("--port", type=int, default=8000, help="Port to bind to")
     parser.add_argument("--model", help="Path to model file to pre-load")
     

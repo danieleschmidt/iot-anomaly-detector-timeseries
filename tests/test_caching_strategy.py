@@ -152,6 +152,26 @@ class TestCacheKeyGeneration(unittest.TestCase):
         self.assertEqual(key1, key2)
         # Different parameters should produce different keys
         self.assertNotEqual(key1, key3)
+        
+    def test_cache_key_uses_secure_hash(self):
+        """Test that cache key generation uses secure hashing algorithm."""
+        
+        # Test with numpy array
+        arr = np.array([1, 2, 3])
+        key = generate_cache_key(arr)
+        
+        # Verify key is a 64-character SHA-256 hex string (not 32-char MD5)
+        self.assertEqual(len(key), 64, "Cache key should be SHA-256 hash (64 chars)")
+        self.assertTrue(all(c in '0123456789abcdef' for c in key), "Cache key should be valid hex")
+        
+        # Test reproducibility - same input should generate same key
+        key2 = generate_cache_key(arr)
+        self.assertEqual(key, key2, "Same input should generate same cache key")
+        
+        # Test that different data generates different keys
+        arr2 = np.array([1, 2, 4])
+        key3 = generate_cache_key(arr2)
+        self.assertNotEqual(key, key3, "Different input should generate different cache key")
 
 
 class TestCacheDecorator(unittest.TestCase):
