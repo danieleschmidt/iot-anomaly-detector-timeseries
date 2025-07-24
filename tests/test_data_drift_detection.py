@@ -328,7 +328,9 @@ class TestDriftAlert(unittest.TestCase):
             feature_drifts={'feature1': True, 'feature2': False}
         )
         
-        alert = DriftAlert.from_drift_result(drift_result)
+        from src.data_drift_detector import DriftDetectionConfig
+        config = DriftDetectionConfig()
+        alert = DriftAlert.from_drift_result(drift_result, config)
         
         self.assertIsInstance(alert, DriftAlert)
         self.assertIn('drift detected', alert.message.lower())
