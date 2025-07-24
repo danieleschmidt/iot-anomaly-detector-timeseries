@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.12 - Test Infrastructure Fix
+
+### Bug Fixes
+- **Fixed missing test dependencies** - Added psutil to requirements.txt for performance monitoring tests
+  - Resolved ModuleNotFoundError preventing test suite execution
+  - All 373 tests now properly discoverable and executable
+  - Improved CI/CD reliability by ensuring complete dependency coverage
+
 ## v0.0.11 - Security Improvements and Bug Fixes
 
 ### Security

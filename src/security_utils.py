@@ -139,7 +139,7 @@ def validate_joblib_file(file_path: str) -> str:
         ValueError: If file is unsafe to load
     """
     # Check file extension
-    if not file_path.lower().endswith(('.joblib', '.pkl', '.pickle')):
+    if not str(file_path).lower().endswith(('.joblib', '.pkl', '.pickle')):
         raise ValueError(f"Invalid file extension for joblib file: {file_path}")
     
     # Validate path
