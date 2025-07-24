@@ -266,8 +266,25 @@ class AutonomousBacklogManager:
             self.logger.warning(f"Error running security scan: {e}")
     
     def _discover_from_dependencies(self) -> None:
-        """Check for outdated dependencies"""
+        """Check for outdated project dependencies"""
         try:
+            # Check project requirements files
+            req_files = ['requirements.txt', 'requirements-dev.txt']
+            project_deps = set()
+            
+            for req_file in req_files:
+                req_path = self.repo_path / req_file
+                if req_path.exists():
+                    content = req_path.read_text()
+                    for line in content.strip().split('\n'):
+                        if line and not line.startswith('#'):
+                            dep_name = line.split('==')[0].split('>=')[0].split('<=')[0].strip()
+                            project_deps.add(dep_name.lower())
+            
+            if not project_deps:
+                return
+                
+            # Get outdated packages
             result = subprocess.run([
                 'python3', '-m', 'pip', 'list', '--outdated', '--format=json'
             ], capture_output=True, text=True, cwd=self.repo_path)
@@ -275,22 +292,57 @@ class AutonomousBacklogManager:
             if result.returncode == 0 and result.stdout.strip():
                 outdated = json.loads(result.stdout)
                 
-                if outdated:  # Only create item if there are outdated packages
-                    item = BacklogItem(
-                        id="dependency_updates",
-                        title=f"Update {len(outdated)} Outdated Dependencies",
-                        type="maintenance",
-                        description=f"Update packages: {', '.join(p['name'] for p in outdated[:5])}",
-                        acceptance_criteria=["Update all outdated packages safely"],
-                        effort=5,
-                        value=3,
-                        time_criticality=2,
-                        risk_reduction=4,
-                        status="NEW",
-                        risk_tier="MEDIUM",
-                        created_at=datetime.now().isoformat(),
-                        links=["requirements.txt"]
-                    )
+                # Filter to only project dependencies
+                outdated_project = [pkg for pkg in outdated if pkg['name'].lower() in project_deps]
+                
+                if outdated_project:
+                    # Create refined task with clear acceptance criteria
+                    critical_deps = [pkg for pkg in outdated_project if pkg['name'].lower() in ['pyjwt', 'cryptography', 'tensorflow']]
+                    
+                    if critical_deps:
+                        # High priority for security-critical deps
+                        item = BacklogItem(
+                            id="security_dependency_updates",
+                            title=f"Update {len(critical_deps)} Security-Critical Dependencies",
+                            type="security",
+                            description=f"Critical updates: {', '.join(p['name'] + ' ' + p['version'] + '->' + p['latest_version'] for p in critical_deps)}",
+                            acceptance_criteria=[
+                                "Update security-critical dependencies",
+                                "Run full test suite to verify compatibility", 
+                                "Check for breaking changes in changelog",
+                                "Update requirements.txt with new versions"
+                            ],
+                            effort=3,
+                            value=8,
+                            time_criticality=6,
+                            risk_reduction=8,
+                            status="READY",  # Ready for execution
+                            risk_tier="MEDIUM",
+                            created_at=datetime.now().isoformat(),
+                            links=["requirements.txt", "requirements-dev.txt"]
+                        )
+                    else:
+                        # Lower priority for non-critical deps
+                        item = BacklogItem(
+                            id="dependency_maintenance",
+                            title=f"Update {len(outdated_project)} Project Dependencies",
+                            type="maintenance",
+                            description=f"Update packages: {', '.join(p['name'] for p in outdated_project[:5])}",
+                            acceptance_criteria=[
+                                "Review changelog for breaking changes",
+                                "Update dependencies incrementally",
+                                "Run test suite after each update",
+                                "Update requirements files"
+                            ],
+                            effort=5,
+                            value=3,
+                            time_criticality=2,
+                            risk_reduction=4,
+                            status="READY",  # Ready for execution
+                            risk_tier="LOW",
+                            created_at=datetime.now().isoformat(),
+                            links=["requirements.txt", "requirements-dev.txt"]
+                        )
                     
                     self.backlog.append(item)
                     
