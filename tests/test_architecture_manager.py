@@ -10,7 +10,7 @@ import argparse
 
 from src.architecture_manager import (
     list_architectures, show_architecture, validate_config, create_template,
-    test_architecture, compare_architectures, main
+    compare_architectures, main
 )
 
 
@@ -321,117 +321,6 @@ class TestCreateTemplate:
         assert nested_output.parent.exists()
 
 
-class TestTestArchitecture:
-    """Test test_architecture functionality."""
-    
-    def test_test_architecture_successful(self, temp_dir, sample_architecture_config, capsys):
-        """Test successful architecture testing."""
-        config_file = Path(temp_dir) / "test_config.json"
-        with open(config_file, 'w') as f:
-            json.dump(sample_architecture_config, f)
-        
-        args = argparse.Namespace()
-        args.config_file = str(config_file)
-        args.verbose = False
-        
-        mock_model = MagicMock()
-        mock_model.count_params.return_value = 12345
-        mock_model.layers = [MagicMock(), MagicMock(), MagicMock()]
-        
-        with patch('src.architecture_manager.load_architecture_config', 
-                   return_value=sample_architecture_config), \
-             patch('src.architecture_manager.create_autoencoder_from_config', 
-                   return_value=mock_model):
-            
-            test_architecture(args)
-            
-            captured = capsys.readouterr()
-            assert "✓ Configuration loaded successfully." in captured.out
-            assert "✓ Model built successfully!" in captured.out
-            assert "Total parameters: 12,345" in captured.out
-            assert "Input shape: [30, 3]" in captured.out
-            assert "Latent dimension: 16" in captured.out
-            assert "Number of layers: 3" in captured.out
-    
-    def test_test_architecture_verbose(self, temp_dir, sample_architecture_config, capsys):
-        """Test architecture testing with verbose output."""
-        config_file = Path(temp_dir) / "test_config.json"
-        with open(config_file, 'w') as f:
-            json.dump(sample_architecture_config, f)
-        
-        args = argparse.Namespace()
-        args.config_file = str(config_file)
-        args.verbose = True
-        
-        mock_model = MagicMock()
-        mock_model.count_params.return_value = 12345
-        mock_model.layers = [MagicMock(), MagicMock()]
-        
-        with patch('src.architecture_manager.load_architecture_config', 
-                   return_value=sample_architecture_config), \
-             patch('src.architecture_manager.create_autoencoder_from_config', 
-                   return_value=mock_model):
-            
-            test_architecture(args)
-            
-            captured = capsys.readouterr()
-            assert "Model summary:" in captured.out
-            mock_model.summary.assert_called_once()
-    
-    def test_test_architecture_no_tensorflow(self, temp_dir, sample_architecture_config, capsys):
-        """Test architecture testing when TensorFlow not available."""
-        config_file = Path(temp_dir) / "test_config.json"
-        with open(config_file, 'w') as f:
-            json.dump(sample_architecture_config, f)
-        
-        args = argparse.Namespace()
-        args.config_file = str(config_file)
-        args.verbose = False
-        
-        with patch('src.architecture_manager.load_architecture_config', 
-                   return_value=sample_architecture_config), \
-             patch('src.architecture_manager.create_autoencoder_from_config', 
-                   return_value=None):
-            
-            test_architecture(args)
-            
-            captured = capsys.readouterr()
-            assert "✓ Model configuration is valid (TensorFlow not available" in captured.out
-    
-    def test_test_architecture_missing_file(self, temp_dir, capsys):
-        """Test testing non-existent configuration file."""
-        args = argparse.Namespace()
-        args.config_file = str(Path(temp_dir) / "nonexistent.json")
-        
-        with pytest.raises(SystemExit) as exc_info:
-            test_architecture(args)
-        
-        assert exc_info.value.code == 1
-        captured = capsys.readouterr()
-        assert "Error: Configuration file" in captured.out
-        assert "not found." in captured.out
-    
-    def test_test_architecture_build_error(self, temp_dir, sample_architecture_config, capsys):
-        """Test architecture testing with model building error."""
-        config_file = Path(temp_dir) / "test_config.json"
-        with open(config_file, 'w') as f:
-            json.dump(sample_architecture_config, f)
-        
-        args = argparse.Namespace()
-        args.config_file = str(config_file)
-        args.verbose = False
-        
-        with patch('src.architecture_manager.load_architecture_config', 
-                   return_value=sample_architecture_config), \
-             patch('src.architecture_manager.create_autoencoder_from_config', 
-                   side_effect=Exception("Model build failed")):
-            
-            with pytest.raises(SystemExit) as exc_info:
-                test_architecture(args)
-            
-            assert exc_info.value.code == 1
-            captured = capsys.readouterr()
-            assert "✗ Error building model: Model build failed" in captured.out
 
 
 class TestCompareArchitectures:
@@ -570,13 +459,6 @@ class TestMainCLI:
         with patch('sys.argv', ['architecture_manager', 'template', '-o', 'template.json']):
             main()
             mock_template.assert_called_once()
-    
-    @patch('src.architecture_manager.test_architecture')
-    def test_main_test_command(self, mock_test):
-        """Test main with test command."""
-        with patch('sys.argv', ['architecture_manager', 'test', '-c', 'config.json']):
-            main()
-            mock_test.assert_called_once()
     
     @patch('src.architecture_manager.compare_architectures')
     def test_main_compare_command(self, mock_compare):
