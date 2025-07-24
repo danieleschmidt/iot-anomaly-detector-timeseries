@@ -29,8 +29,11 @@ def sanitize_path(file_path: str) -> str:
         >>> sanitize_path("legitimate/file.txt")
         'legitimate/file.txt'
     """
-    if not isinstance(file_path, str):
-        raise TypeError("file_path must be a string")
+    if not isinstance(file_path, (str, os.PathLike)):
+        raise TypeError("file_path must be a string or PathLike object")
+    
+    # Convert PathLike to string
+    file_path = str(file_path)
     
     # Convert to Path object and resolve to remove .. sequences
     path = Path(file_path)

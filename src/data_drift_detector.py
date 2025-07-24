@@ -112,7 +112,7 @@ class DriftAlert:
             severity = 'MEDIUM'
         
         # Generate message
-        drifted_features = [f for f, drifted in result.feature_drifts.items() if drifted]
+        drifted_features = [str(f) for f, drifted in result.feature_drifts.items() if drifted]
         message = f"Data drift detected in {len(drifted_features)} features: {', '.join(drifted_features[:3])}"
         if len(drifted_features) > 3:
             message += f" and {len(drifted_features) - 3} more"

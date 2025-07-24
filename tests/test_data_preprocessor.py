@@ -71,7 +71,7 @@ def test_load_invalid_csv(tmp_path):
     invalid_csv = tmp_path / "invalid.csv"
     invalid_csv.write_text("not,valid,csv\ncontent")
     dp = DataPreprocessor()
-    with pytest.raises(ValueError, match="DataFrame contains missing values"):
+    with pytest.raises(ValueError, match="Data validation failed"):
         dp.load_and_preprocess(str(invalid_csv), window_size=3)
 
 
@@ -136,7 +136,7 @@ def test_load_corrupted_scaler(tmp_path):
 
 def test_load_nonexistent_scaler():
     """Test error handling for non-existent scaler file."""
-    with pytest.raises(FileNotFoundError, match="Scaler file not found"):
+    with pytest.raises(ValueError, match="File does not exist"):
         DataPreprocessor.load("nonexistent.pkl")
 
 

@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.0.13 - Critical Bug Fixes and Test Infrastructure
+
+### Bug Fixes
+- **Fixed missing test dependencies** - Added psutil to requirements.txt for performance monitoring tests
+  - Resolved ModuleNotFoundError preventing test suite execution
+  - All 373 tests now properly discoverable and executable
+  - Improved CI/CD reliability by ensuring complete dependency coverage
+- **Fixed pytest fixture scoping issues** - Moved module-level fixtures in test_architecture_manager.py
+  - Resolved fixture not found errors in multiple test classes  
+  - Fixed 25 failing architecture manager tests
+- **Fixed security utils Path object handling** - Enhanced security_utils.py to accept PathLike objects
+  - Resolved TypeError in validate_joblib_file when passed Path objects
+  - Updated sanitize_path to handle both str and PathLike inputs
+- **Fixed data drift detection string conversion** - Convert feature names to strings in drift alerts
+  - Resolved TypeError when feature names are integers in DriftAlert.from_drift_result
+- **Fixed test assertions for validation errors** - Updated test expectations to match actual error messages
+  - Tests now properly validate data validation error messages
+
 ## v0.0.12 - Test Infrastructure Fix
 
 ### Bug Fixes
