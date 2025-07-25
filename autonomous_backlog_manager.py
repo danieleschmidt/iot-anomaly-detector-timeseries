@@ -106,6 +106,9 @@ class AutonomousBacklogManager:
         # Update aging for existing items
         self._update_aging()
         
+        # Deduplicate items by ID
+        self._deduplicate_backlog()
+        
         self.logger.info(f"Discovery complete. Found {len(self.backlog)} items")
     
     def _load_existing_backlog(self) -> None:
@@ -357,6 +360,18 @@ class AutonomousBacklogManager:
                 item.aging_days = (datetime.now() - created).days
             except:
                 item.aging_days = 0
+    
+    def _deduplicate_backlog(self) -> None:
+        """Remove duplicate items based on ID"""
+        seen_ids = set()
+        unique_items = []
+        
+        for item in self.backlog:
+            if item.id not in seen_ids:
+                seen_ids.add(item.id)
+                unique_items.append(item)
+        
+        self.backlog = unique_items
     
     def score_and_sort_backlog(self) -> None:
         """Score and sort backlog by WSJF"""
