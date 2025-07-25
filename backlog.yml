@@ -1,30 +1,10 @@
 metadata:
   version: '2.0'
-  last_discovery: '2025-07-25T05:39:38.161739'
-  total_items: 1
+  last_discovery: '2025-07-25T13:45:52.294290'
+  total_items: 0
   wsjf_methodology: true
 backlog:
-  ready:
-  - id: dependency_maintenance
-    title: Update 1 Project Dependencies
-    type: maintenance
-    description: 'Update packages: PyYAML'
-    acceptance_criteria:
-    - Review changelog for breaking changes
-    - Update dependencies incrementally
-    - Run test suite after each update
-    - Update requirements files
-    effort: 5
-    value: 3
-    time_criticality: 2
-    risk_reduction: 4
-    status: READY
-    risk_tier: LOW
-    created_at: '2025-07-25T05:39:38.161362'
-    links:
-    - requirements.txt
-    - requirements-dev.txt
-    aging_days: 0
+  ready: []
   doing: []
   pr_review: []
   blocked: []

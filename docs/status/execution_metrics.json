@@ -1,26 +1,16 @@
 {
-  "timestamp": "2025-07-25T05:39:38.164111",
-  "mission_status": "ACTIVE",
+  "timestamp": "2025-07-25T13:45:52.295693",
+  "mission_status": "COMPLETE",
   "execution_summary": {
-    "total_tasks_discovered": 1,
+    "total_tasks_discovered": 0,
     "wsjf_driven": true,
-    "status_breakdown": {
-      "READY": 1
-    }
+    "status_breakdown": {}
   },
-  "top_priorities": [
-    {
-      "id": "dependency_maintenance",
-      "title": "Update 1 Project Dependencies",
-      "wsjf_score": 1.8,
-      "type": "maintenance",
-      "status": "READY"
-    }
-  ],
+  "top_priorities": [],
   "system_health": {
-    "backlog_size": 1,
+    "backlog_size": 0,
     "high_priority_items": 0,
     "blocked_items": 0,
-    "ready_items": 1
+    "ready_items": 0
   }
 }
