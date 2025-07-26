@@ -286,7 +286,10 @@ class TestDataDriftDetector(unittest.TestCase):
         self.detector.set_reference_data(self.reference_df)
         
         # Perform some drift detections
-        test_data = pd.DataFrame(np.random.randn(100, 5))
+        test_data = pd.DataFrame(
+            np.random.randn(100, 5),
+            columns=[f'feature_{i}' for i in range(5)]
+        )
         self.detector.detect_drift(test_data)
         
         # Verify state before reset

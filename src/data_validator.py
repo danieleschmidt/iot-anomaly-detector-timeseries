@@ -328,9 +328,20 @@ class DataValidator:
         fixed_df = df.copy()
         fixes_applied = []
         
-        # Convert non-numeric columns to numeric where possible
+        # Convert non-numeric columns to numeric where possible (but skip datetime-like columns)
         for col in fixed_df.columns:
             if not pd.api.types.is_numeric_dtype(fixed_df[col]):
+                # Skip columns that look like timestamps/dates
+                if col.lower() in ['timestamp', 'time', 'date', 'datetime']:
+                    continue
+                # Check if column might be datetime by trying to parse a sample
+                try:
+                    sample_val = str(fixed_df[col].iloc[0]) if len(fixed_df) > 0 else ""
+                    if any(date_indicator in sample_val.lower() for date_indicator in ['-', '/', ':', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']):
+                        continue
+                except:
+                    pass
+                
                 try:
                     fixed_df[col] = pd.to_numeric(fixed_df[col], errors='coerce')
                     fixes_applied.append(f"Converted column '{col}' to numeric")
@@ -347,8 +358,11 @@ class DataValidator:
                 # Only interpolate if missing ratio is low
                 missing_ratio = fixed_df.isnull().sum().sum() / (len(fixed_df) * len(fixed_df.columns))
                 if missing_ratio < 0.05:
-                    fixed_df = fixed_df.interpolate()
-                    fixes_applied.append("Interpolated missing values")
+                    # Only interpolate numeric columns to avoid deprecation warning
+                    numeric_cols = fixed_df.select_dtypes(include=[np.number]).columns
+                    if len(numeric_cols) > 0:
+                        fixed_df[numeric_cols] = fixed_df[numeric_cols].interpolate()
+                        fixes_applied.append("Interpolated missing values")
         
         # Remove duplicate rows
         duplicates_before = fixed_df.duplicated().sum()

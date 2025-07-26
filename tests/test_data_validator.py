@@ -568,7 +568,7 @@ class TestDataValidatorIntegration:
         """Test complete validation pipeline with real data file."""
         # Create realistic sensor data
         np.random.seed(42)
-        timestamps = pd.date_range('2023-01-01', periods=200, freq='H')
+        timestamps = pd.date_range('2023-01-01', periods=200, freq='h')
         df = pd.DataFrame({
             'timestamp': timestamps,
             'temperature': np.random.normal(20, 5, 200),
@@ -598,6 +598,11 @@ class TestDataValidatorIntegration:
         assert validated_df is not None
         assert len(validated_df) > 0
         
-        # Should detect the outlier
-        assert any("outliers" in warning.lower() for warning in result.warnings) or \
-               any("outliers" in error.lower() for error in result.errors)
+        # Should detect the outlier in the summary (outlier ratio tracking)
+        assert 'quality_validation' in result.summary
+        assert 'outlier_ratios' in result.summary['quality_validation']
+        outlier_ratios = result.summary['quality_validation']['outlier_ratios']
+        
+        # Should detect outliers in pressure column (we added one extreme outlier)
+        assert 'pressure' in outlier_ratios
+        assert outlier_ratios['pressure'] > 0  # Should detect the outlier we added

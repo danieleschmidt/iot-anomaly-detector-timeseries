@@ -4,3 +4,8 @@ saved_models/
 .data/
 *.ipynb_checkpoints
 *.egg-info/
+venv/
+test_venv/
+test_env/
+.pytest_cache/
+*.log
