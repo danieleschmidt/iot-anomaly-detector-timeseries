@@ -119,8 +119,12 @@ def evaluate(
         # Calculate ROC AUC using reconstruction scores as probabilities
         try:
             roc_auc = roc_auc_score(window_labels, scores)
+            # Handle NaN result (newer sklearn returns NaN instead of raising ValueError)
+            if np.isnan(roc_auc):
+                roc_auc = 0.0
+                logger.warning("ROC AUC could not be calculated - all labels are the same class")
         except ValueError:
-            # Handle case where all labels are the same class
+            # Handle case where all labels are the same class (older sklearn behavior)
             roc_auc = 0.0
             logger.warning("ROC AUC could not be calculated - all labels are the same class")
         
