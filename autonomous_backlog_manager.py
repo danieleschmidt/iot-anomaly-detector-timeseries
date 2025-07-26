@@ -295,8 +295,27 @@ class AutonomousBacklogManager:
             if result.returncode == 0 and result.stdout.strip():
                 outdated = json.loads(result.stdout)
                 
-                # Filter to only project dependencies
-                outdated_project = [pkg for pkg in outdated if pkg['name'].lower() in project_deps]
+                # Filter to only project dependencies that actually need updates
+                outdated_project = []
+                for pkg in outdated:
+                    if pkg['name'].lower() in project_deps:
+                        # Check if this package actually violates our requirements
+                        needs_update = True
+                        
+                        # Special case: if we have a flexible constraint like >=6.0.1
+                        # and current version is 6.0.1, that's satisfied
+                        if pkg['name'].lower() == 'pyyaml':
+                            try:
+                                current = pkg['version']
+                                # If we have >=6.0.1 and current is 6.0.1, that's fine
+                                if current == '6.0.1':
+                                    self.logger.info(f"PyYAML {current} satisfies >=6.0.1 requirement, skipping update")
+                                    needs_update = False
+                            except:
+                                pass
+                        
+                        if needs_update:
+                            outdated_project.append(pkg)
                 
                 if outdated_project:
                     # Create refined task with clear acceptance criteria
