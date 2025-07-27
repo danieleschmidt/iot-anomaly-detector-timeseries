@@ -1,0 +1,510 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 2 * * *' # Daily at 2 AM
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of security scan'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - code
+          - dependencies
+          - secrets
+          - docker
+          - infrastructure
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  # Code security analysis
+  code-security:
+    name: Code Security Analysis
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'code' || github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == ''
+    
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install security tools
+        run: |
+          pip install bandit[toml] safety semgrep
+
+      - name: Run Bandit security scan
+        run: |
+          echo "=== Running Bandit Security Scan ==="
+          bandit -r src/ -f json -o bandit-results.json || true
+          bandit -r src/ -f txt
+
+      - name: Run Semgrep security scan
+        run: |
+          echo "=== Running Semgrep Security Scan ==="
+          semgrep --config=auto src/ --json --output=semgrep-results.json || true
+          semgrep --config=auto src/ --text
+
+      - name: Upload code security results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-security-results
+          path: |
+            bandit-results.json
+            semgrep-results.json
+
+  # Dependency security scanning
+  dependency-security:
+    name: Dependency Security Scanning
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'dependencies' || github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == ''
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install safety pip-audit
+
+      - name: Run Safety check
+        run: |
+          echo "=== Running Safety Check ==="
+          safety check --json --output safety-results.json || true
+          safety check
+
+      - name: Run pip-audit
+        run: |
+          echo "=== Running pip-audit ==="
+          pip-audit --format=json --output=pip-audit-results.json || true
+          pip-audit --desc
+
+      - name: Check for known vulnerabilities
+        run: |
+          echo "=== Vulnerability Summary ==="
+          
+          # Analyze safety results
+          if [ -f "safety-results.json" ]; then
+              vulnerability_count=$(jq '.vulnerabilities | length' safety-results.json 2>/dev/null || echo "0")
+              echo "Safety vulnerabilities found: $vulnerability_count"
+          fi
+          
+          # Analyze pip-audit results
+          if [ -f "pip-audit-results.json" ]; then
+              audit_vulnerabilities=$(jq '.vulnerabilities | length' pip-audit-results.json 2>/dev/null || echo "0")
+              echo "Pip-audit vulnerabilities found: $audit_vulnerabilities"
+          fi
+
+      - name: Upload dependency security results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-security-results
+          path: |
+            safety-results.json
+            pip-audit-results.json
+
+  # Secrets scanning
+  secrets-scan:
+    name: Secrets Scanning
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'secrets' || github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == ''
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install detect-secrets
+        run: |
+          pip install detect-secrets
+
+      - name: Run secrets detection
+        run: |
+          echo "=== Running Secrets Detection ==="
+          
+          # Update baseline
+          detect-secrets scan --baseline .secrets.baseline --force-use-all-plugins || true
+          
+          # Check for new secrets
+          detect-secrets audit .secrets.baseline --report --fail-on-unaudited-potential-secret || {
+            echo "⚠️ Potential secrets detected. Please review and audit."
+            exit 1
+          }
+
+      - name: Upload secrets scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: secrets-scan-results
+          path: .secrets.baseline
+
+  # Docker security scanning
+  docker-security:
+    name: Docker Security Scanning
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'docker' || github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == ''
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image for scanning
+        run: |
+          echo "=== Building Docker Image ==="
+          docker build -t iot-anomaly-detector:security-scan .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'iot-anomaly-detector:security-scan'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+
+      - name: Run Docker Scout
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "=== Running Docker Scout ==="
+          # Install Docker Scout
+          curl -sSfL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh | sh -s --
+          
+          # Run security scan
+          docker scout cves iot-anomaly-detector:security-scan --format sarif --output docker-scout-results.sarif || true
+
+      - name: Upload Docker security results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Upload filesystem security results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
+
+      - name: Upload Docker security artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: docker-security-results
+          path: |
+            trivy-results.sarif
+            trivy-fs-results.sarif
+            docker-scout-results.sarif
+
+  # Infrastructure security
+  infrastructure-security:
+    name: Infrastructure Security
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'infrastructure' || github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == ''
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install infrastructure security tools
+        run: |
+          # Install checkov
+          pip install checkov
+          
+          # Install tfsec
+          curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+
+      - name: Run Checkov scan
+        run: |
+          echo "=== Running Checkov Infrastructure Scan ==="
+          checkov -d . --framework dockerfile,github_actions,yaml --output json --output-file checkov-results.json || true
+          checkov -d . --framework dockerfile,github_actions,yaml
+
+      - name: Scan GitHub Actions workflows
+        run: |
+          echo "=== Scanning GitHub Actions Workflows ==="
+          
+          # Create workflow security analysis script
+          cat > analyze_workflows.py << 'EOF'
+          import os
+          import yaml
+          import json
+          
+          def analyze_workflows():
+              issues = []
+              workflows_dir = '.github/workflows'
+              
+              if not os.path.exists(workflows_dir):
+                  return issues
+              
+              for filename in os.listdir(workflows_dir):
+                  if filename.endswith('.yml') or filename.endswith('.yaml'):
+                      filepath = os.path.join(workflows_dir, filename)
+                      
+                      try:
+                          with open(filepath, 'r') as f:
+                              workflow = yaml.safe_load(f)
+                          
+                          # Check for security issues
+                          if 'on' in workflow:
+                              # Check for pull_request_target usage
+                              if 'pull_request_target' in workflow['on']:
+                                  issues.append({
+                                      'file': filename,
+                                      'issue': 'Uses pull_request_target - review for security implications',
+                                      'severity': 'medium'
+                                  })
+                              
+                              # Check for workflow_dispatch
+                              if 'workflow_dispatch' in workflow['on']:
+                                  inputs = workflow['on'].get('workflow_dispatch', {}).get('inputs', {})
+                                  for input_name, input_config in inputs.items():
+                                      if input_config.get('required', False) is False:
+                                          issues.append({
+                                              'file': filename,
+                                              'issue': f'workflow_dispatch input "{input_name}" is not required',
+                                              'severity': 'low'
+                                          })
+                          
+                          # Check jobs
+                          if 'jobs' in workflow:
+                              for job_name, job_config in workflow['jobs'].items():
+                                  # Check for missing permissions
+                                  if 'permissions' not in job_config and 'permissions' not in workflow:
+                                      issues.append({
+                                          'file': filename,
+                                          'issue': f'Job "{job_name}" missing explicit permissions',
+                                          'severity': 'medium'
+                                      })
+                                  
+                                  # Check for shell injection risks
+                                  if 'steps' in job_config:
+                                      for step in job_config['steps']:
+                                          if 'run' in step and '${{' in step['run']:
+                                              issues.append({
+                                                  'file': filename,
+                                                  'issue': f'Job "{job_name}" may have shell injection risk',
+                                                  'severity': 'high'
+                                              })
+                      
+                      except Exception as e:
+                          issues.append({
+                              'file': filename,
+                              'issue': f'Failed to parse workflow: {e}',
+                              'severity': 'low'
+                          })
+              
+              return issues
+          
+          if __name__ == "__main__":
+              issues = analyze_workflows()
+              
+              if issues:
+                  print("Security issues found in workflows:")
+                  for issue in issues:
+                      print(f"  [{issue['severity'].upper()}] {issue['file']}: {issue['issue']}")
+                  
+                  # Save results
+                  with open('workflow-security-results.json', 'w') as f:
+                      json.dump(issues, f, indent=2)
+              else:
+                  print("No security issues found in workflows")
+          EOF
+          
+          python analyze_workflows.py
+
+      - name: Upload infrastructure security results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: infrastructure-security-results
+          path: |
+            checkov-results.json
+            workflow-security-results.json
+
+  # Security report generation
+  security-report:
+    name: Security Report
+    runs-on: ubuntu-latest
+    needs: [code-security, dependency-security, secrets-scan, docker-security, infrastructure-security]
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all security artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: security-results/
+
+      - name: Generate security report
+        run: |
+          echo "=== Generating Security Report ==="
+          
+          cat > generate_security_report.py << 'EOF'
+          import os
+          import json
+          import glob
+          from datetime import datetime
+          
+          def generate_report():
+              report = {
+                  'scan_date': datetime.now().isoformat(),
+                  'summary': {
+                      'total_issues': 0,
+                      'critical': 0,
+                      'high': 0,
+                      'medium': 0,
+                      'low': 0
+                  },
+                  'scans': {}
+              }
+              
+              # Process results from each scan type
+              results_dir = 'security-results'
+              
+              if os.path.exists(results_dir):
+                  for scan_dir in os.listdir(results_dir):
+                      scan_path = os.path.join(results_dir, scan_dir)
+                      if os.path.isdir(scan_path):
+                          report['scans'][scan_dir] = {
+                              'status': 'completed',
+                              'files': os.listdir(scan_path),
+                              'issues': []
+                          }
+              
+              # Generate markdown report
+              markdown_report = f"""# Security Scan Report
+          
+          **Generated**: {report['scan_date']}
+          **Commit**: {os.environ.get('GITHUB_SHA', 'unknown')[:7]}
+          **Branch**: {os.environ.get('GITHUB_REF', 'unknown').replace('refs/heads/', '')}
+          
+          ## Summary
+          
+          | Severity | Count |
+          |----------|-------|
+          | Critical | {report['summary']['critical']} |
+          | High     | {report['summary']['high']} |
+          | Medium   | {report['summary']['medium']} |
+          | Low      | {report['summary']['low']} |
+          
+          ## Scan Results
+          
+          """
+              
+              for scan_name, scan_data in report['scans'].items():
+                  markdown_report += f"### {scan_name.replace('-', ' ').title()}\n"
+                  markdown_report += f"- Status: {scan_data['status']}\n"
+                  markdown_report += f"- Files generated: {len(scan_data['files'])}\n\n"
+              
+              markdown_report += """
+          ## Recommendations
+          
+          1. Review all critical and high severity issues immediately
+          2. Address medium severity issues in the next sprint
+          3. Schedule regular security scans
+          4. Update dependencies regularly
+          5. Implement security best practices in development
+          
+          ## Next Steps
+          
+          - [ ] Review and triage security findings
+          - [ ] Create issues for critical vulnerabilities
+          - [ ] Update security policies if needed
+          - [ ] Schedule follow-up scans
+          """
+              
+              # Save reports
+              with open('security-report.json', 'w') as f:
+                  json.dump(report, f, indent=2)
+              
+              with open('security-report.md', 'w') as f:
+                  f.write(markdown_report)
+              
+              print("Security report generated successfully")
+              
+              # Print summary
+              print(f"Total scans: {len(report['scans'])}")
+              print(f"Total issues: {report['summary']['total_issues']}")
+          
+          if __name__ == "__main__":
+              generate_report()
+          EOF
+          
+          python generate_security_report.py
+
+      - name: Create security issue if critical vulnerabilities found
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Check if security report exists
+            try {
+              const reportData = JSON.parse(fs.readFileSync('security-report.json', 'utf8'));
+              const markdownReport = fs.readFileSync('security-report.md', 'utf8');
+              
+              // Check for critical issues
+              const criticalCount = reportData.summary.critical || 0;
+              const highCount = reportData.summary.high || 0;
+              
+              if (criticalCount > 0 || highCount > 0) {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: `🔒 Security Alert - ${criticalCount} Critical, ${highCount} High Severity Issues`,
+                  body: markdownReport,
+                  labels: ['security', 'critical', 'needs-immediate-attention']
+                });
+                
+                console.log(`Created security alert issue for ${criticalCount + highCount} high-priority vulnerabilities`);
+              } else {
+                console.log('No critical or high severity issues found');
+              }
+              
+            } catch (error) {
+              console.log('Could not process security report:', error.message);
+            }
+
+      - name: Upload final security report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-report
+          path: |
+            security-report.json
+            security-report.md

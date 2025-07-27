@@ -1,0 +1,49 @@
+# Global ownership - fallback for any files not covered by specific rules
+* @terragonlabs/core-team
+
+# Source code ownership
+/src/ @terragonlabs/core-team @terragonlabs/ml-team
+
+# Machine Learning specific files
+/src/*autoencoder* @terragonlabs/ml-team
+/src/*model* @terragonlabs/ml-team
+/src/train_* @terragonlabs/ml-team
+/src/evaluate_* @terragonlabs/ml-team
+/notebooks/ @terragonlabs/ml-team
+
+# Infrastructure and DevOps
+/.github/ @terragonlabs/devops-team
+/docker-compose.yml @terragonlabs/devops-team
+/Dockerfile @terragonlabs/devops-team
+/Makefile @terragonlabs/devops-team
+/.pre-commit-config.yaml @terragonlabs/devops-team
+/pyproject.toml @terragonlabs/devops-team @terragonlabs/core-team
+
+# Security-sensitive files
+/src/security_* @terragonlabs/security-team
+/SECURITY.md @terragonlabs/security-team
+/.secrets.baseline @terragonlabs/security-team
+
+# Documentation
+/README.md @terragonlabs/core-team @terragonlabs/docs-team
+/docs/ @terragonlabs/docs-team
+/CHANGELOG.md @terragonlabs/docs-team
+/CONTRIBUTING.md @terragonlabs/docs-team
+/CODE_REVIEW.md @terragonlabs/docs-team
+
+# Testing
+/tests/ @terragonlabs/core-team @terragonlabs/qa-team
+/tests/security/ @terragonlabs/security-team
+/tests/performance/ @terragonlabs/performance-team
+
+# Configuration files
+/requirements*.txt @terragonlabs/core-team @terragonlabs/security-team
+/config.yaml @terragonlabs/core-team
+/pytest.ini @terragonlabs/qa-team
+
+# Data and scripts
+/data/ @terragonlabs/ml-team @terragonlabs/data-team
+/scripts/ @terragonlabs/devops-team
+
+# Architecture decisions
+/docs/adr/ @terragonlabs/architecture-team @terragonlabs/core-team

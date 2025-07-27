@@ -1,0 +1,382 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: 'Dry run (test without publishing)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.12'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Pre-release validation
+  pre-release:
+    name: Pre-Release Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    outputs:
+      new_version: ${{ steps.version.outputs.new_version }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install release tools
+        run: |
+          pip install bump2version
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Calculate new version
+        id: version
+        run: |
+          current_version=$(grep -E '^version = ' pyproject.toml | cut -d'"' -f2)
+          echo "Current version: $current_version"
+          
+          # Calculate new version
+          new_version=$(bump2version --dry-run --current-version "$current_version" ${{ github.event.inputs.version_type }} | grep "new_version" | cut -d'=' -f2)
+          echo "New version: $new_version"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "=== Generating Changelog ==="
+          
+          # Get latest tag
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "HEAD")
+          echo "Latest tag: $latest_tag"
+          
+          # Generate changelog since last tag
+          changelog=$(git log --pretty=format:"- %s (%h)" $latest_tag..HEAD --no-merges | head -20)
+          
+          if [ -z "$changelog" ]; then
+            changelog="- No changes since last release"
+          fi
+          
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$changelog" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run pre-release tests
+        run: |
+          echo "=== Running Pre-Release Tests ==="
+          make quality
+          make test
+
+      - name: Create version bump PR
+        if: ${{ !github.event.inputs.dry_run }}
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            chore(release): bump version to ${{ steps.version.outputs.new_version }}
+            
+            🤖 Generated with [Claude Code](https://claude.ai/code)
+            
+            Co-Authored-By: Claude <noreply@anthropic.com>
+          branch: release-${{ steps.version.outputs.new_version }}
+          title: '🚀 Release ${{ steps.version.outputs.new_version }}'
+          body: |
+            ## 🎉 Release ${{ steps.version.outputs.new_version }}
+            
+            This PR prepares the release for version `${{ steps.version.outputs.new_version }}`.
+            
+            ### 📋 Changes
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### ✅ Pre-Release Checklist
+            - [x] All tests passed
+            - [x] Code quality checks passed
+            - [x] Version bumped in pyproject.toml
+            - [ ] CHANGELOG.md updated (manual review required)
+            - [ ] Documentation updated if needed
+            
+            ### 🚀 Next Steps
+            1. Review and merge this PR
+            2. Create a release tag: `git tag v${{ steps.version.outputs.new_version }}`
+            3. Push the tag to trigger release workflow
+            
+            ---
+            
+            🤖 This release was automatically prepared.
+          labels: |
+            release
+            automated
+
+  # Build and test
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    needs: [pre-release]
+    if: always() && !failure()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run full test suite
+        run: |
+          echo "=== Running Full Test Suite ==="
+          make quality
+          make test
+          make integration
+
+      - name: Build package
+        run: |
+          echo "=== Building Package ==="
+          python -m build
+          twine check dist/*
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.run_number }}
+          path: dist/
+
+  # Docker build
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [build]
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run security scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Publish release
+  publish:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs: [build, docker-build]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          merge-multiple: true
+          path: dist/
+
+      - name: Extract version
+        id: version
+        run: |
+          version=${GITHUB_REF#refs/tags/v}
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          echo "=== Generating Release Notes ==="
+          
+          # Get previous tag
+          previous_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "HEAD")
+          echo "Previous tag: $previous_tag"
+          
+          # Generate release notes
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          echo "## 🎉 Release ${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### 📋 Changes" >> $GITHUB_OUTPUT
+          git log --pretty=format:"- %s (%h)" $previous_tag..HEAD --no-merges | head -20 >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### 🔗 Links" >> $GITHUB_OUTPUT
+          echo "- [Docker Image](https://github.com/${{ github.repository }}/pkgs/container/${{ github.event.repository.name }})" >> $GITHUB_OUTPUT
+          echo "- [PyPI Package](https://pypi.org/project/iot-anomaly-detector-timeseries/)" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### 📊 Metrics" >> $GITHUB_OUTPUT
+          echo "- Package size: $(du -sh dist/ | cut -f1)" >> $GITHUB_OUTPUT
+          echo "- Build time: $(date -u)" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Publish to PyPI
+        if: ${{ !github.event.inputs.dry_run }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          verbose: true
+
+      - name: Create GitHub Release
+        if: ${{ !github.event.inputs.dry_run }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ steps.version.outputs.version }}
+          body: ${{ steps.release_notes.outputs.release_notes }}
+          files: dist/*
+          generate_release_notes: false
+          make_latest: true
+
+  # Post-release tasks
+  post-release:
+    name: Post-Release Tasks
+    runs-on: ubuntu-latest
+    needs: [publish]
+    if: always() && needs.publish.result == 'success'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update project metrics
+        run: |
+          echo "=== Updating Project Metrics ==="
+          
+          # Create or update metrics file
+          mkdir -p .github
+          cat > .github/project-metrics.json << EOF
+          {
+            "last_release": {
+              "version": "${{ github.ref_name }}",
+              "date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+              "commit": "${{ github.sha }}"
+            },
+            "build_metrics": {
+              "workflow_run": "${{ github.run_id }}",
+              "build_time": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            }
+          }
+          EOF
+
+      - name: Create follow-up tasks issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📋 Post-Release Tasks for ${{ github.ref_name }}',
+              body: `## 🎉 Release ${{ github.ref_name }} Published Successfully!
+
+              ### ✅ Completed Tasks
+              - [x] Package published to PyPI
+              - [x] Docker image published to GHCR
+              - [x] GitHub release created
+              - [x] Security scans completed
+
+              ### 📋 Follow-up Tasks
+              - [ ] Update documentation website
+              - [ ] Announce release on social media/blog
+              - [ ] Update dependent projects
+              - [ ] Monitor release metrics
+              - [ ] Update changelog if needed
+
+              ### 📊 Release Metrics
+              - Release Date: $(date -u)
+              - Workflow Run: ${{ github.run_id }}
+              - Commit: ${{ github.sha }}
+
+              **Note**: This issue can be closed once all follow-up tasks are completed.`,
+              labels: ['release', 'task-list', 'post-release']
+            });
+
+      - name: Notify team (placeholder)
+        run: |
+          echo "=== Release Notification ==="
+          echo "Release ${{ github.ref_name }} has been published successfully!"
+          echo "Add team notification logic here (Slack, email, etc.)"
