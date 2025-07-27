@@ -1,10 +1,50 @@
 metadata:
   version: '2.0'
-  last_discovery: '2025-07-26T05:58:16.347597'
-  total_items: 0
+  last_discovery: '2025-07-27T07:20:30.474182'
+  total_items: 2
   wsjf_methodology: true
 backlog:
-  ready: []
+  ready:
+  - id: security_dependency_updates
+    title: Update 1 Security-Critical Dependencies
+    type: security
+    description: 'Critical updates: tensorflow 2.17.1->2.19.0'
+    acceptance_criteria:
+    - Update security-critical dependencies
+    - Run full test suite to verify compatibility
+    - Check for breaking changes in changelog
+    - Update requirements.txt with new versions
+    effort: 3
+    value: 8
+    time_criticality: 6
+    risk_reduction: 8
+    status: READY
+    risk_tier: MEDIUM
+    created_at: '2025-07-27T07:20:30.473868'
+    links:
+    - requirements.txt
+    - requirements-dev.txt
+    aging_days: 0
+  - id: dependency_maintenance
+    title: Update 6 Project Dependencies
+    type: maintenance
+    description: 'Update packages: matplotlib, numpy, pandas, psutil, pytest'
+    acceptance_criteria:
+    - Review changelog for breaking changes
+    - Update dependencies incrementally
+    - Run test suite after each update
+    - Update requirements files
+    effort: 5
+    value: 3
+    time_criticality: 2
+    risk_reduction: 4
+    status: READY
+    risk_tier: LOW
+    created_at: '2025-07-27T07:14:29.447737'
+    links:
+    - requirements.txt
+    - requirements-dev.txt
+    aging_days: 0
   doing: []
   pr_review: []
   blocked: []

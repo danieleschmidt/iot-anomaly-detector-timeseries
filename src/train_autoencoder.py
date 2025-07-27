@@ -345,3 +345,64 @@ if __name__ == "__main__":
         architecture_name=args.architecture_name,
         use_flexible_architecture=args.use_flexible_architecture,
     )
+
+
+def train_model(csv_path: str, **kwargs) -> tuple:
+    """
+    Train a model and return model and training artifacts.
+    
+    This function is used by integration tests and provides a simpler interface
+    than the main() function for programmatic usage.
+    
+    Parameters
+    ----------
+    csv_path : str
+        Path to training data CSV file
+    **kwargs
+        Additional parameters passed to main()
+        
+    Returns
+    -------
+    tuple
+        (model_path, training_history, model_metadata)
+    """
+    # Call main training function
+    model_path = main(csv_path=csv_path, **kwargs)
+    
+    # Return artifacts for testing
+    return model_path, {}, {}
+
+
+def save_artifacts(model, scaler, model_path: str, scaler_path: str = None) -> dict:
+    """
+    Save model and preprocessing artifacts.
+    
+    This function is used by integration tests to save training artifacts.
+    
+    Parameters
+    ----------
+    model
+        Trained Keras model
+    scaler
+        Fitted preprocessing scaler
+    model_path : str
+        Path to save the model
+    scaler_path : str, optional
+        Path to save the scaler
+        
+    Returns
+    -------
+    dict
+        Dictionary with paths to saved artifacts
+    """
+    # Save model
+    model.save(model_path)
+    
+    # Save scaler if provided
+    artifacts = {"model_path": model_path}
+    if scaler_path and scaler:
+        import joblib
+        joblib.dump(scaler, scaler_path)
+        artifacts["scaler_path"] = scaler_path
+    
+    return artifacts

@@ -264,3 +264,7 @@ if __name__ == "__main__":
         scaler_path=args.scaler_path,
         train_epochs=args.train_epochs,
     )
+
+
+# Alias for integration tests
+evaluate_model = evaluate
