@@ -1,0 +1,235 @@
+version: '3.8'
+
+services:
+  # Main application service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8000:8000"
+      - "9090:9090"  # Prometheus metrics
+    volumes:
+      - .:/app:delegated
+      - data-volume:/app/data
+      - models-volume:/app/saved_models
+      - logs-volume:/app/logs
+    environment:
+      - ENVIRONMENT=development
+      - LOG_LEVEL=DEBUG
+      - DATABASE_URL=postgresql://user:password@postgres:5432/anomaly_db
+      - REDIS_URL=redis://redis:6379/0
+      - PROMETHEUS_ENABLED=true
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # PostgreSQL database for metadata and results
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: anomaly_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d anomaly_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for caching and session storage
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - app-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  # Jupyter notebook for data exploration
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app:delegated
+      - data-volume:/app/data
+      - models-volume:/app/saved_models
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=development
+    command: ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root"]
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Testing service
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: testing
+    volumes:
+      - .:/app:delegated
+      - test-reports:/app/test-reports
+    environment:
+      - ENVIRONMENT=test
+      - DATABASE_URL=postgresql://user:password@postgres:5432/test_db
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - app-network
+    profiles:
+      - testing
+
+  # Security scanning service
+  security:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: security
+    volumes:
+      - .:/app:delegated
+      - security-reports:/app/security-reports
+    profiles:
+      - security
+
+  # Data generator service for continuous data simulation
+  data-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    volumes:
+      - data-volume:/app/data
+    environment:
+      - ENVIRONMENT=development
+      - DATA_GENERATION_INTERVAL=60
+    command: ["python", "-m", "src.generate_data", "--continuous", "--interval", "60"]
+    networks:
+      - app-network
+    restart: unless-stopped
+    profiles:
+      - simulation
+
+  # Model training service
+  trainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    volumes:
+      - data-volume:/app/data
+      - models-volume:/app/saved_models
+    environment:
+      - ENVIRONMENT=development
+      - TRAINING_SCHEDULE=daily
+    networks:
+      - app-network
+    profiles:
+      - training
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+      - grafana
+    networks:
+      - app-network
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  data-volume:
+    driver: local
+  models-volume:
+    driver: local
+  logs-volume:
+    driver: local
+  test-reports:
+    driver: local
+  security-reports:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

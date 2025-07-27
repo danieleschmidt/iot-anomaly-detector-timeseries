@@ -1,11 +1,154 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
-saved_models/
-.data/
-*.ipynb_checkpoints
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
-venv/
-test_venv/
-test_env/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
 .pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+test_env/
+test_venv/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Project-specific
+# Data files
+data/processed/
+data/models/
+data/cache/
+.data/
+*.csv
+*.pkl
+*.h5
+*.hdf5
+*.npy
+*.npz
+
+# Model artifacts
+saved_models/
+models/
+*.joblib
+*.onnx
+*.pb
+model_checkpoints/
+
+# Logs
+logs/
 *.log
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+*.tmp
+*.temp
+
+# OS-specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Security
+.secrets.baseline
+security-audit.json
+*.key
+*.pem
+*.crt
+*.p12
+
+# Monitoring and metrics
+prometheus_data/
+grafana_data/
+metrics/
+monitoring/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Secrets and credentials
+*.secret
+*.secrets
+config/secrets.yaml
+config/local.yaml
