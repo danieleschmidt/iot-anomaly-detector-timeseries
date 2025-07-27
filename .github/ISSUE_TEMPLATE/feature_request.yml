@@ -1,0 +1,182 @@
+name: 🚀 Feature Request
+description: Suggest a new feature or enhancement
+title: "[FEATURE] "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please fill out the form below to help us understand your request.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm the following before submitting a feature request
+      options:
+        - label: I have searched existing issues and this is not a duplicate
+          required: true
+        - label: I have checked the roadmap and this feature is not already planned
+          required: true
+        - label: This feature aligns with the project's goals and scope
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: |
+        A clear and concise description of what the problem is.
+        Example: "I'm always frustrated when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see
+      placeholder: |
+        A clear and concise description of what you want to happen.
+        Include details about:
+        - What the feature should do
+        - How it should work
+        - Expected user interface or API
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or features you've considered
+      placeholder: |
+        A clear and concise description of any alternative solutions or features you've considered.
+        Why might these alternatives not work as well?
+
+  - type: textarea
+    id: use_cases
+    attributes:
+      label: Use Cases
+      description: Describe specific use cases for this feature
+      placeholder: |
+        Provide specific examples of how this feature would be used:
+        1. User story 1: As a [user type], I want [feature] so that [benefit]
+        2. User story 2: ...
+        3. Example scenario: ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: What priority should this feature have?
+      options:
+        - Low - Nice to have, not urgent
+        - Medium - Would improve user experience significantly
+        - High - Important for many users or use cases
+        - Critical - Blocking important functionality
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component would this feature primarily affect?
+      options:
+        - Data Processing
+        - Model Training
+        - Anomaly Detection
+        - API/Web Interface
+        - Database
+        - Deployment/Infrastructure
+        - Documentation
+        - CLI Tools
+        - Monitoring/Observability
+        - Security
+        - Performance
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: user_type
+    attributes:
+      label: Target Users
+      description: Who would primarily benefit from this feature?
+      options:
+        - Data Scientists/ML Engineers
+        - DevOps/Infrastructure Engineers
+        - End Users/Operators
+        - Developers/Integrators
+        - System Administrators
+        - All Users
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical_details
+    attributes:
+      label: Technical Considerations
+      description: Any technical details, constraints, or implementation ideas
+      placeholder: |
+        Include any technical considerations such as:
+        - Implementation approach or architecture
+        - Performance requirements
+        - Compatibility concerns
+        - Dependencies on other features
+        - Security implications
+        - Testing considerations
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: What would make this feature "done"?
+      placeholder: |
+        Define clear acceptance criteria:
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+        - [ ] Criterion 3
+        
+        This helps ensure we deliver exactly what you need.
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups/Examples
+      description: Any mockups, diagrams, or examples that illustrate the feature
+      placeholder: |
+        If applicable, provide:
+        - Screenshots or mockups
+        - Code examples
+        - API specifications
+        - Configuration examples
+        - Links to similar implementations
+
+  - type: checkboxes
+    id: implementation
+    attributes:
+      label: Implementation
+      description: Are you interested in helping implement this feature?
+      options:
+        - label: I would be willing to implement this feature
+        - label: I would be willing to help design this feature
+        - label: I would be willing to help test this feature
+        - label: I would be willing to help document this feature
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Add any other context or information about the feature request
+      placeholder: |
+        Any additional information that might be helpful:
+        - Related issues or features
+        - External references or research
+        - Business impact or justification
+        - Timeline requirements

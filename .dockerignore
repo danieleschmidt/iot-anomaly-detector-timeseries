@@ -1,0 +1,117 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+test_env/
+test_venv/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+data/processed/
+data/cache/
+saved_models/
+logs/
+*.log
+.tmp/
+temp/
+*.tmp
+
+# Development files
+scripts/
+.pre-commit-config.yaml
+.editorconfig
+requirements-dev.txt
+
+# Security
+.env
+.env.*
+*.key
+*.pem
+*.crt
+.secrets.baseline
+
+# Large files
+*.h5
+*.hdf5
+*.pkl
+*.joblib
+*.onnx
+*.pb
+*.csv
+*.npy
+*.npz
+
+# Monitoring
+prometheus_data/
+grafana_data/
+monitoring/
+
+# Backup files
+*.bak
+*.backup
+*.old

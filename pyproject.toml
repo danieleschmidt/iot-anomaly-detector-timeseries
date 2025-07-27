@@ -6,7 +6,208 @@ build-backend = "setuptools.build_meta"
 name = "iot_anomaly_detector_timeseries"
 version = "0.0.3"
 requires-python = ">=3.8"
+description = "IoT Time Series Anomaly Detection using LSTM Autoencoders"
+authors = [
+    {name = "Terragon Labs", email = "dev@terragonlabs.com"},
+]
+license = {text = "MIT"}
+readme = "README.md"
+keywords = ["anomaly-detection", "iot", "time-series", "lstm", "autoencoder", "machine-learning"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: System :: Monitoring",
+]
+
+[project.urls]
+Homepage = "https://github.com/terragonlabs/iot-anomaly-detector"
+Documentation = "https://iot-anomaly-detector.readthedocs.io"
+Repository = "https://github.com/terragonlabs/iot-anomaly-detector"
+Issues = "https://github.com/terragonlabs/iot-anomaly-detector/issues"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 packages = ["iot_anomaly_detector_timeseries"]
+
+[tool.setuptools.package-data]
+"iot_anomaly_detector_timeseries" = ["py.typed"]
+
+# Black formatting configuration
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | venv
+  | test_env
+  | test_venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+# Ruff linting configuration
+[tool.ruff]
+target-version = "py38"
+line-length = 88
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "SIM", # flake8-simplify
+    "PTH", # flake8-use-pathlib
+    "PL",  # pylint
+    "RUF", # ruff-specific rules
+    "S",   # bandit security
+    "N",   # pep8-naming
+    "ERA", # eradicate commented code
+    "T20", # flake8-print
+]
+ignore = [
+    "E501",   # line too long (handled by black)
+    "PLR0913", # too many arguments
+    "PLR0912", # too many branches
+    "PLR0915", # too many statements
+    "S101",    # use of assert (ok in tests)
+    "T201",    # print found (ok for CLI tools)
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+    ".venv",
+    "venv",
+    "test_env",
+    "test_venv",
+]
+per-file-ignores = {
+    "tests/*" = ["S101", "ARG001", "ARG002"],
+    "scripts/*" = ["T201"],
+    "notebooks/*" = ["T201", "E402"],
+}
+
+[tool.ruff.isort]
+known-first-party = ["src"]
+force-single-line = true
+
+# MyPy type checking configuration
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+show_error_codes = true
+show_column_numbers = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+
+# Pytest configuration
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml",
+    "--cov-fail-under=90",
+]
+testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "performance: marks tests as performance tests",
+    "security: marks tests as security tests",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/test_env/*",
+    "*/test_venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+# Bandit security configuration
+[tool.bandit]
+exclude_dirs = ["tests", "test_env", "test_venv", "venv"]
+skips = ["B101", "B601"]  # Skip assert and shell usage in specific contexts
+
+# Semantic release configuration
+[tool.semantic_release]
+version_variable = "src/iot_anomaly_detector_timeseries/__init__.py:__version__"
+version_pattern = "pyproject.toml:version = \"{version}\""
+build_command = "pip install build && python -m build"
+upload_to_pypi = false
+upload_to_release = true
+commit_subject = "chore(release): {version}"
+commit_message = "chore(release): {version}\n\n{changelog}"

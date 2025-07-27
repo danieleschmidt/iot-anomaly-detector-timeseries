@@ -1,0 +1,382 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      prerelease:
+        description: 'Create pre-release'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+  id-token: write  # For trusted publishing to PyPI
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  # Validate release readiness
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install semantic-version
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            # Manual trigger - calculate next version
+            current_version=$(grep "version = " pyproject.toml | cut -d'"' -f2)
+            echo "Current version: $current_version"
+            
+            # Use semantic-version to bump
+            python -c "
+            import semantic_version
+            v = semantic_version.Version('$current_version')
+            bump_type = '${{ github.event.inputs.version_type }}'
+            if bump_type == 'patch':
+                new_v = v.next_patch()
+            elif bump_type == 'minor':
+                new_v = v.next_minor()
+            else:
+                new_v = v.next_major()
+            print(f'version={new_v}')
+            print(f'tag=v{new_v}')
+            " >> $GITHUB_OUTPUT
+          else
+            # Tag trigger - extract version from tag
+            tag=${GITHUB_REF#refs/tags/}
+            version=${tag#v}
+            echo "version=$version" >> $GITHUB_OUTPUT
+            echo "tag=$tag" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate changelog
+        run: |
+          if [[ ! -f CHANGELOG.md ]]; then
+            echo "Warning: CHANGELOG.md not found"
+          else
+            # Check if changelog has entries for this version
+            if ! grep -q "${{ steps.version.outputs.version }}" CHANGELOG.md; then
+              echo "Warning: No changelog entry found for version ${{ steps.version.outputs.version }}"
+            fi
+          fi
+
+      - name: Run quality checks
+        run: |
+          make lint
+          make type-check
+          make security
+
+      - name: Run tests
+        run: |
+          make test
+          make coverage
+
+      - name: Validate package build
+        run: |
+          python -m build
+          twine check dist/*
+
+  # Create release artifacts
+  build:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+    needs: validate
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install build dependencies
+        run: |
+          pip install build twine
+
+      - name: Update version
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          # Update version in pyproject.toml
+          sed -i 's/version = "[^"]*"/version = "${{ needs.validate.outputs.version }}"/' pyproject.toml
+          
+          # Update version in package __init__.py if it exists
+          if [[ -f src/iot_anomaly_detector_timeseries/__init__.py ]]; then
+            sed -i 's/__version__ = "[^"]*"/__version__ = "${{ needs.validate.outputs.version }}"/' src/iot_anomaly_detector_timeseries/__init__.py
+          fi
+
+      - name: Build Python package
+        run: |
+          python -m build
+          
+          # Verify the build
+          twine check dist/*
+          
+          # Show package contents
+          echo "Package contents:"
+          ls -la dist/
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package
+          path: |
+            dist/
+            sbom.spdx.json
+
+  # Build and publish Docker images
+  docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [validate, build]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        if: github.repository_owner == 'terragonlabs'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}
+            ${{ github.repository_owner == 'terragonlabs' && 'terragonlabs/iot-anomaly-detector' || '' }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.validate.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.validate.outputs.version }}
+            type=semver,pattern={{major}},value=${{ needs.validate.outputs.version }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: production
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ needs.validate.outputs.version }}
+            BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+            VCS_REF=${{ github.sha }}
+
+      - name: Run security scan on image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}:${{ needs.validate.outputs.version }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Publish to PyPI
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: [validate, build]
+    environment: pypi
+    
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package
+          path: dist/
+
+      - name: Publish to TestPyPI
+        if: github.event.inputs.prerelease == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+
+      - name: Publish to PyPI
+        if: github.event.inputs.prerelease != 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+  # Create GitHub release
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate, build, docker, publish]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package
+          path: dist/
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Extract release notes from CHANGELOG.md if it exists
+          if [[ -f CHANGELOG.md ]]; then
+            # Extract section for this version
+            awk '/^## \[${{ needs.validate.outputs.version }}\]/{flag=1; next} /^## /{flag=0} flag' CHANGELOG.md > release_notes.md
+            
+            if [[ ! -s release_notes.md ]]; then
+              echo "No changelog entry found, generating automatic release notes"
+              echo "Release ${{ needs.validate.outputs.version }}" > release_notes.md
+              echo "" >> release_notes.md
+              echo "### Changes" >> release_notes.md
+              git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> release_notes.md || echo "- Initial release" >> release_notes.md
+            fi
+          else
+            echo "Release ${{ needs.validate.outputs.version }}" > release_notes.md
+            echo "" >> release_notes.md
+            echo "### Changes" >> release_notes.md
+            git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> release_notes.md || echo "- Initial release" >> release_notes.md
+          fi
+
+      - name: Create or update tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ needs.validate.outputs.tag }}" -m "Release ${{ needs.validate.outputs.version }}"
+          git push origin "${{ needs.validate.outputs.tag }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.validate.outputs.tag }}
+          name: Release ${{ needs.validate.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          files: |
+            dist/*
+            sbom.spdx.json
+          generate_release_notes: true
+
+  # Post-release tasks
+  post-release:
+    name: Post-Release Tasks
+    runs-on: ubuntu-latest
+    needs: [validate, release]
+    if: always() && needs.release.result == 'success'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update documentation
+        run: |
+          # Update README badges if needed
+          echo "Documentation updated for release ${{ needs.validate.outputs.version }}"
+
+      - name: Create next development cycle PR
+        if: github.event_name == 'workflow_dispatch'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            chore: prepare for next development cycle
+            
+            - Bump version after release ${{ needs.validate.outputs.version }}
+            - Update development configuration
+          title: "chore: prepare for next development cycle"
+          body: |
+            ## Post-Release Updates
+            
+            This PR prepares the repository for the next development cycle after releasing version ${{ needs.validate.outputs.version }}.
+            
+            ### Changes
+            - 📝 Updated version references
+            - 🔧 Refreshed development configuration
+            - 📋 Prepared for next feature development
+            
+            ---
+            🤖 Generated automatically after release
+          branch: chore/post-release-${{ needs.validate.outputs.version }}
+          labels: chore,automated
+
+      - name: Notify stakeholders
+        run: |
+          echo "Release ${{ needs.validate.outputs.version }} completed successfully!"
+          echo "Package published to PyPI: https://pypi.org/project/iot-anomaly-detector-timeseries/${{ needs.validate.outputs.version }}/"
+          echo "Docker image: ghcr.io/${{ github.repository }}:${{ needs.validate.outputs.version }}"
+          echo "GitHub release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ needs.validate.outputs.tag }}"

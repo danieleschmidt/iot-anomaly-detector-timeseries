@@ -1,0 +1,155 @@
+name: 🐛 Bug Report
+description: Create a report to help us improve
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug! Please fill out the form below to help us understand and reproduce the issue.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm the following before submitting a bug report
+      options:
+        - label: I have searched existing issues and this is not a duplicate
+          required: true
+        - label: I have read the documentation and followed troubleshooting steps
+          required: true
+        - label: I am using a supported version of the software
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of the software are you using?
+      placeholder: "e.g., v0.0.3"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe the bug in detail
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe what should have happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Describe what actually happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Provide step-by-step instructions to reproduce the issue
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Execute command '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Please provide information about your environment
+      value: |
+        - OS: [e.g., Ubuntu 20.04, macOS 12.0, Windows 10]
+        - Python Version: [e.g., 3.12.0]
+        - Docker Version: [e.g., 20.10.17]
+        - Installation Method: [e.g., pip, Docker, source]
+        - Hardware: [e.g., CPU, RAM, GPU if relevant]
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs
+      description: Please provide relevant error logs or stack traces
+      placeholder: Paste error logs here
+      render: shell
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Configuration
+      description: Please provide relevant configuration (remove sensitive information)
+      placeholder: |
+        # Configuration file contents or environment variables
+        # Please remove any sensitive information like passwords, API keys, etc.
+      render: yaml
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+      placeholder: |
+        - Screenshots if applicable
+        - Related issues or PRs
+        - Workarounds you've tried
+        - Any other relevant information
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Low - Minor issue, workaround available
+        - Medium - Significant issue, impacts functionality
+        - High - Major issue, blocks important functionality
+        - Critical - System unusable or data loss
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component is affected?
+      options:
+        - Data Processing
+        - Model Training
+        - Anomaly Detection
+        - API/Web Interface
+        - Database
+        - Docker/Deployment
+        - Documentation
+        - CI/CD
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: willing_to_contribute
+    attributes:
+      label: Contribution
+      description: Are you willing to help fix this issue?
+      options:
+        - label: I would be willing to submit a pull request to fix this issue
+        - label: I would be willing to help test a fix for this issue
