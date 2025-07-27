@@ -9,6 +9,118 @@ from pathlib import Path
 from .model_metadata import ModelMetadata
 
 
+class ModelManager:
+    """
+    Model management class for handling model versions and metadata.
+    
+    This class provides a programmatic interface to model management functionality
+    that's used by integration tests and other parts of the system.
+    """
+    
+    def __init__(self, model_directory: str = "saved_models"):
+        """
+        Initialize ModelManager.
+        
+        Parameters
+        ----------
+        model_directory : str
+            Directory where models and metadata are stored
+        """
+        self.model_directory = Path(model_directory)
+        self.metadata_manager = ModelMetadata(model_directory)
+    
+    def list_models(self) -> list:
+        """
+        List all available model versions.
+        
+        Returns
+        -------
+        list
+            List of model version information dictionaries
+        """
+        return self.metadata_manager.list_model_versions()
+    
+    def get_model_metadata(self, version: str) -> dict:
+        """
+        Get metadata for a specific model version.
+        
+        Parameters
+        ----------
+        version : str
+            Model version identifier
+            
+        Returns
+        -------
+        dict
+            Model metadata
+        """
+        metadata_path = self.model_directory / f"metadata_{version}.json"
+        return self.metadata_manager.load_metadata(metadata_path)
+    
+    def compare_models(self, version1: str, version2: str) -> dict:
+        """
+        Compare two model versions.
+        
+        Parameters
+        ----------
+        version1 : str
+            First model version
+        version2 : str
+            Second model version
+            
+        Returns
+        -------
+        dict
+            Comparison results
+        """
+        meta1 = self.get_model_metadata(version1)
+        meta2 = self.get_model_metadata(version2)
+        
+        return {
+            "version1": version1,
+            "version2": version2,
+            "metadata1": meta1,
+            "metadata2": meta2
+        }
+    
+    def cleanup_old_models(self, keep_count: int = 5) -> list:
+        """
+        Clean up old model versions.
+        
+        Parameters
+        ----------
+        keep_count : int
+            Number of recent models to keep
+            
+        Returns
+        -------
+        list
+            List of removed model files
+        """
+        versions = self.list_models()
+        if len(versions) <= keep_count:
+            return []
+        
+        # Sort by creation date (newest first)
+        versions.sort(key=lambda x: x['created_at'], reverse=True)
+        
+        # Remove old versions
+        removed_files = []
+        for version_info in versions[keep_count:]:
+            model_file = self.model_directory / version_info['model_file']
+            metadata_file = self.model_directory / f"metadata_{version_info['version']}.json"
+            
+            if model_file.exists():
+                model_file.unlink()
+                removed_files.append(str(model_file))
+            
+            if metadata_file.exists():
+                metadata_file.unlink()
+                removed_files.append(str(metadata_file))
+        
+        return removed_files
+
+
 def list_models(args):
     """List all available model versions."""
     metadata_manager = ModelMetadata(args.model_directory)
