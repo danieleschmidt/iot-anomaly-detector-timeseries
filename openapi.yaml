@@ -1,0 +1,110 @@
+openapi: 3.0.3
+info:
+  title: IoT Anomaly Detection API
+  description: Advanced ML-powered anomaly detection for IoT time series data
+  version: 0.0.3
+  contact:
+    name: Terragon Labs
+    email: dev@terragonlabs.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.anomaly-detector.terragonlabs.com
+    description: Production server
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /predict:
+    post:
+      summary: Detect anomalies in time series data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: number
+                  description: Time series data as array of arrays
+                threshold:
+                  type: number
+                  default: 0.5
+                  description: Anomaly detection threshold
+              required:
+                - data
+      responses:
+        '200':
+          description: Anomaly detection results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  anomalies:
+                    type: array
+                    items:
+                      type: integer
+                    description: Indices of anomalous data points
+                  reconstruction_errors:
+                    type: array
+                    items:
+                      type: number
+                    description: Reconstruction error for each window
+
+  /model/info:
+    get:
+      summary: Get model information
+      responses:
+        '200':
+          description: Model metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  model_version:
+                    type: string
+                  training_date:
+                    type: string
+                    format: date-time
+                  performance_metrics:
+                    type: object
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
