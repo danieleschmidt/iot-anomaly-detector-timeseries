@@ -1,0 +1,165 @@
+groups:
+  - name: iot_anomaly_detector_alerts
+    rules:
+      # Application Health Alerts
+      - alert: ApplicationDown
+        expr: up{job="iot-anomaly-detector"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: iot-anomaly-detector
+        annotations:
+          summary: "IoT Anomaly Detector application is down"
+          description: "The IoT Anomaly Detector application has been down for more than 1 minute."
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: iot-anomaly-detector
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors per second for the last 5 minutes."
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: iot-anomaly-detector
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }} seconds."
+
+  - name: ml_model_alerts
+    rules:
+      # Model Performance Alerts
+      - alert: ModelAccuracyDrop
+        expr: ml_model_accuracy < 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: ml-model
+        annotations:
+          summary: "Model accuracy has dropped"
+          description: "Model accuracy is {{ $value }}, below the acceptable threshold of 0.8."
+
+      - alert: ModelPredictionLatencyHigh
+        expr: ml_prediction_duration_seconds > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: ml-model
+        annotations:
+          summary: "Model prediction latency is high"
+          description: "Model prediction time is {{ $value }} seconds, exceeding the 5-second threshold."
+
+      - alert: AnomalyDetectionRateUnusual
+        expr: rate(ml_anomalies_detected_total[1h]) > 0.5 or rate(ml_anomalies_detected_total[1h]) < 0.001
+        for: 30m
+        labels:
+          severity: warning
+          service: ml-model
+        annotations:
+          summary: "Unusual anomaly detection rate"
+          description: "Anomaly detection rate is {{ $value }} per hour, which is outside normal range."
+
+      - alert: DataDriftDetected
+        expr: ml_data_drift_score > 0.7
+        for: 15m
+        labels:
+          severity: critical
+          service: ml-model
+        annotations:
+          summary: "Data drift detected"
+          description: "Data drift score is {{ $value }}, indicating significant distribution changes in input data."
+
+  - name: infrastructure_alerts
+    rules:
+      # Resource Usage Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}."
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value }}% on {{ $labels.instance }}."
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is {{ $value }}% full on {{ $labels.instance }}:{{ $labels.mountpoint }}."
+
+  - name: data_pipeline_alerts
+    rules:
+      # Data Quality Alerts
+      - alert: DataIngestionFailure
+        expr: increase(data_ingestion_errors_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+          service: data-pipeline
+        annotations:
+          summary: "Data ingestion failures detected"
+          description: "{{ $value }} data ingestion errors in the last 5 minutes."
+
+      - alert: DataProcessingBacklog
+        expr: data_processing_queue_size > 1000
+        for: 10m
+        labels:
+          severity: warning
+          service: data-pipeline
+        annotations:
+          summary: "Data processing backlog building up"
+          description: "Data processing queue has {{ $value }} items pending."
+
+      - alert: MissingDataPoints
+        expr: absent_over_time(sensor_data_points_total[15m])
+        for: 15m
+        labels:
+          severity: critical
+          service: data-pipeline
+        annotations:
+          summary: "No sensor data received"
+          description: "No sensor data has been received for the last 15 minutes."
+
+  - name: security_alerts
+    rules:
+      # Security Monitoring
+      - alert: UnauthorizedAccess
+        expr: increase(http_requests_total{status="401"}[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "Multiple unauthorized access attempts"
+          description: "{{ $value }} unauthorized access attempts in the last 5 minutes."
+
+      - alert: SuspiciousActivity
+        expr: rate(http_requests_total[5m]) > 100
+        for: 10m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "Unusual request rate detected"
+          description: "Request rate is {{ $value }} requests per second, which may indicate suspicious activity."
