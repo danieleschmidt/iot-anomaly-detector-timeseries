@@ -1,0 +1,116 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current File",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "Python: Train Model",
+      "type": "python",
+      "request": "launch",
+      "module": "src.train_autoencoder",
+      "console": "integratedTerminal",
+      "args": [
+        "--epochs", "5",
+        "--window-size", "30",
+        "--latent-dim", "16"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "Python: Detect Anomalies",
+      "type": "python",
+      "request": "launch",
+      "module": "src.anomaly_detector",
+      "console": "integratedTerminal",
+      "args": [
+        "--model-path", "saved_models/autoencoder.h5",
+        "--csv-path", "data/raw/sensor_data.csv",
+        "--quantile", "0.95"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "Python: Generate Data",
+      "type": "python",
+      "request": "launch",
+      "module": "src.generate_data",
+      "console": "integratedTerminal",
+      "args": [
+        "--num-samples", "1000",
+        "--num-features", "3",
+        "--output-path", "data/raw/sensor_data.csv"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "Python: API Server",
+      "type": "python",
+      "request": "launch",
+      "module": "src.model_serving_api",
+      "console": "integratedTerminal",
+      "args": ["--debug", "--reload"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "Python: Test",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "args": [
+        "${workspaceFolder}/tests",
+        "-v"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "Python: Test Current File",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "args": [
+        "${file}",
+        "-v"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "Docker: Debug Container",
+      "type": "python",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "/app"
+        }
+      ],
+      "justMyCode": false
+    }
+  ]
+}

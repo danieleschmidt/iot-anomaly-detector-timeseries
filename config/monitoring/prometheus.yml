@@ -1,0 +1,86 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'iot-anomaly-detector'
+    environment: 'production'
+
+rule_files:
+  - "alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # IoT Anomaly Detector Application Metrics
+  - job_name: 'iot-anomaly-detector'
+    static_configs:
+      - targets: ['app:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    honor_labels: true
+    params:
+      'format': ['prometheus']
+
+  # Model Serving API Metrics
+  - job_name: 'model-api'
+    static_configs:
+      - targets: ['model-api:8001']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    honor_labels: true
+
+  # Infrastructure Metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 15s
+
+  # Database Metrics
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+
+  # Prometheus Self-Monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Custom ML Model Metrics
+  - job_name: 'ml-model-metrics'
+    static_configs:
+      - targets: ['ml-metrics:8002']
+    metrics_path: '/ml-metrics'
+    scrape_interval: 30s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'ml_.*'
+        action: keep
+
+# Remote write configuration for long-term storage
+remote_write:
+  - url: "http://victoriametrics:8428/api/v1/write"
+    queue_config:
+      max_samples_per_send: 1000
+      batch_send_deadline: 5s
+      max_shards: 200
+      min_shards: 1
+      max_retries: 10
+      min_backoff: 30ms
+      max_backoff: 100ms

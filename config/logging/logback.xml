@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Console appender for development -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <logLevel/>
+                <loggerName/>
+                <message/>
+                <mdc/>
+                <arguments/>
+                <stackTrace/>
+            </providers>
+            <jsonGeneratorDecorator class="net.logstash.logback.decorate.CompositeJsonGeneratorDecorator">
+                <decorator class="net.logstash.logback.decorate.PrettyPrintingJsonGeneratorDecorator"/>
+            </jsonGeneratorDecorator>
+        </encoder>
+    </appender>
+
+    <!-- File appender for production -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/iot-anomaly-detector.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/iot-anomaly-detector.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <logLevel/>
+                <loggerName/>
+                <message/>
+                <mdc/>
+                <arguments/>
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- Audit appender for security events -->
+    <appender name="AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/audit.%d{yyyy-MM-dd}.%i.log.gz</fileNameParameter>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>90</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <logLevel/>
+                <loggerName/>
+                <message/>
+                <mdc/>
+                <arguments/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- Error appender for critical issues -->
+    <appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <logLevel/>
+                <loggerName/>
+                <message/>
+                <mdc/>
+                <arguments/>
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- Performance metrics appender -->
+    <appender name="METRICS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/metrics.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/metrics.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <logLevel/>
+                <loggerName/>
+                <message/>
+                <mdc/>
+                <arguments/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- Logger configurations -->
+    <logger name="iot_anomaly_detector" level="INFO"/>
+    <logger name="iot_anomaly_detector.security" level="DEBUG" additivity="false">
+        <appender-ref ref="AUDIT"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="iot_anomaly_detector.performance" level="DEBUG" additivity="false">
+        <appender-ref ref="METRICS"/>
+    </logger>
+    <logger name="iot_anomaly_detector.model" level="INFO"/>
+    <logger name="iot_anomaly_detector.data" level="INFO"/>
+    
+    <!-- Third-party logger levels -->
+    <logger name="tensorflow" level="WARN"/>
+    <logger name="urllib3" level="WARN"/>
+    <logger name="requests" level="WARN"/>
+    <logger name="matplotlib" level="WARN"/>
+    
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="ERROR"/>
+    </root>
+
+    <!-- Development profile -->
+    <springProfile name="dev">
+        <root level="DEBUG">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- Production profile -->
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR"/>
+        </root>
+    </springProfile>
+</configuration>

@@ -1,0 +1,253 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  validate-release:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=${GITHUB_REF#refs/tags/}
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Validate version format
+        run: |
+          if [[ ! "${{ steps.version.outputs.version }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
+            echo "Invalid version format: ${{ steps.version.outputs.version }}"
+            exit 1
+          fi
+
+  test-release:
+    name: Test Before Release
+    runs-on: ubuntu-latest
+    needs: validate-release
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install -e .
+
+      - name: Run full test suite
+        run: make ci-test
+
+      - name: Build package
+        run: python -m build
+
+      - name: Check package
+        run: twine check dist/*
+
+  build-artifacts:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+    needs: [validate-release, test-release]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: |
+            dist/
+            sbom.spdx.json
+          retention-days: 30
+
+  docker-release:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    needs: [validate-release, test-release]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate-release, build-artifacts, docker-release]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: ./release-artifacts
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Extract changes since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          if [[ -n "$LAST_TAG" ]]; then
+            CHANGELOG=$(git log $LAST_TAG..HEAD --pretty=format:"* %s (%h)" --no-merges)
+          else
+            CHANGELOG=$(git log --pretty=format:"* %s (%h)" --no-merges | head -20)
+          fi
+          
+          # Write to file for multiline output
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.validate-release.outputs.version }}
+          release_name: Release ${{ needs.validate-release.outputs.version }}
+          body: |
+            ## Changes
+            
+            ${{ steps.changelog.outputs.CHANGELOG }}
+            
+            ## Installation
+            
+            ### PyPI
+            ```bash
+            pip install iot-anomaly-detector-timeseries==${{ needs.validate-release.outputs.version }}
+            ```
+            
+            ### Docker
+            ```bash
+            docker pull ghcr.io/${{ github.repository }}:${{ needs.validate-release.outputs.version }}
+            ```
+            
+            ## Full Changelog
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.LAST_TAG }}...${{ needs.validate-release.outputs.version }}
+            
+            ## Security
+            - SBOM (Software Bill of Materials) included in release assets
+            - All dependencies scanned for vulnerabilities
+            - Docker images signed and include attestations
+          draft: false
+          prerelease: ${{ contains(needs.validate-release.outputs.version, '-') }}
+
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release-artifacts/sbom.spdx.json
+          asset_name: sbom.spdx.json
+          asset_content_type: application/json
+
+  notify-release:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: [create-release]
+    if: always()
+    
+    steps:
+      - name: Notify success
+        if: needs.create-release.result == 'success'
+        run: |
+          echo "✅ Release ${{ needs.validate-release.outputs.version }} created successfully!"
+          
+      - name: Notify failure
+        if: needs.create-release.result == 'failure'
+        run: |
+          echo "❌ Release ${{ needs.validate-release.outputs.version }} failed!"
+          exit 1

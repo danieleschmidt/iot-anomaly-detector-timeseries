@@ -1,0 +1,37 @@
+# Global code ownership
+* @terragonlabs/core-team
+
+# Python source code
+/src/ @terragonlabs/python-team @terragonlabs/ml-team
+
+# Machine Learning models and training
+/src/*model*.py @terragonlabs/ml-team
+/src/train_*.py @terragonlabs/ml-team
+/src/*autoencoder*.py @terragonlabs/ml-team
+
+# Data processing and validation
+/src/data_*.py @terragonlabs/data-team
+/src/*validator*.py @terragonlabs/data-team
+
+# API and serving infrastructure
+/src/*api*.py @terragonlabs/backend-team
+/src/*serving*.py @terragonlabs/backend-team
+
+# Security-related files
+/src/security_*.py @terragonlabs/security-team
+SECURITY.md @terragonlabs/security-team
+/tests/security/ @terragonlabs/security-team
+
+# Infrastructure and configuration
+/docker-compose.yml @terragonlabs/devops-team
+/Dockerfile @terragonlabs/devops-team
+/Makefile @terragonlabs/devops-team
+/.github/ @terragonlabs/devops-team
+
+# Documentation
+/docs/ @terragonlabs/docs-team
+*.md @terragonlabs/docs-team
+
+# Dependencies and package management
+/requirements*.txt @terragonlabs/core-team @terragonlabs/security-team
+/pyproject.toml @terragonlabs/core-team

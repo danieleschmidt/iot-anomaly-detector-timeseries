@@ -1,0 +1,77 @@
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "terragonlabs/security-team"
+    assignees:
+      - "terragonlabs/core-team"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "security"
+    groups:
+      tensorflow:
+        patterns:
+          - "tensorflow*"
+        update-types:
+          - "minor"
+          - "patch"
+      testing:
+        patterns:
+          - "pytest*"
+          - "coverage"
+        update-types:
+          - "minor"
+          - "patch"
+      dev-tools:
+        patterns:
+          - "ruff"
+          - "black"
+          - "mypy"
+          - "bandit"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Pin TensorFlow to avoid compatibility issues
+      - dependency-name: "tensorflow"
+        update-types: ["version-update:semver-major"]
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+    reviewers:
+      - "terragonlabs/devops-team"
+    commit-message:
+      prefix: "docker"
+    labels:
+      - "docker"
+      - "infrastructure"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+    reviewers:
+      - "terragonlabs/devops-team"
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "github-actions"
+      - "ci-cd"
