@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Automation Notes
+
+This CHANGELOG is maintained manually but can be automated using:
+
+- **Semantic Release**: Configured in `pyproject.toml` with `tool.semantic_release`
+- **Commitizen**: Configured for conventional commits with `tool.commitizen`
+- **GitHub Actions**: See `docs/github-workflows-setup/release.yml` for automated release workflow
+
+### Conventional Commit Format
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Types**: feat, fix, docs, style, refactor, test, chore, perf, build, ci
+
+### Automation Commands
+```bash
+# Generate changelog automatically
+npx semantic-release --dry-run
+
+# Create versioned release with commitizen
+cz bump
+
+# View proposed changes
+cz changelog --dry-run
+```
+
 ## [Unreleased]
 
 ### Added
