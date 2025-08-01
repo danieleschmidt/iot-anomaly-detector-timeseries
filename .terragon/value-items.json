@@ -1,0 +1,394 @@
+[
+  {
+    "id": "deps_2303",
+    "title": "Update dependencies in requirements-dev.txt",
+    "description": "Review and update 2 dependencies for security and compatibility",
+    "category": "dependencies",
+    "effort": 2.0,
+    "business_value": 6,
+    "time_criticality": 7,
+    "risk_reduction": 9,
+    "files": [
+      "/root/repo/requirements-dev.txt"
+    ],
+    "score": 11.0
+  },
+  {
+    "id": "deps_9635",
+    "title": "Update dependencies in requirements-profiling.txt",
+    "description": "Review and update 7 dependencies for security and compatibility",
+    "category": "dependencies",
+    "effort": 2.0,
+    "business_value": 6,
+    "time_criticality": 7,
+    "risk_reduction": 9,
+    "files": [
+      "/root/repo/requirements-profiling.txt"
+    ],
+    "score": 11.0
+  },
+  {
+    "id": "deps_4037",
+    "title": "Update dependencies in requirements.txt",
+    "description": "Review and update 8 dependencies for security and compatibility",
+    "category": "dependencies",
+    "effort": 2.0,
+    "business_value": 6,
+    "time_criticality": 7,
+    "risk_reduction": 9,
+    "files": [
+      "/root/repo/requirements.txt"
+    ],
+    "score": 11.0
+  },
+  {
+    "id": "test_235",
+    "title": "Add tests for cache_manager_cli.py",
+    "description": "No corresponding test file found for cache_manager_cli.py",
+    "category": "testing",
+    "effort": 3.0,
+    "business_value": 7,
+    "time_criticality": 4,
+    "risk_reduction": 8,
+    "files": [
+      "/root/repo/src/cache_manager_cli.py"
+    ],
+    "score": 6.333333333333333
+  },
+  {
+    "id": "test_7022",
+    "title": "Add tests for data_drift_detector.py",
+    "description": "No corresponding test file found for data_drift_detector.py",
+    "category": "testing",
+    "effort": 3.0,
+    "business_value": 7,
+    "time_criticality": 4,
+    "risk_reduction": 8,
+    "files": [
+      "/root/repo/src/data_drift_detector.py"
+    ],
+    "score": 6.333333333333333
+  },
+  {
+    "id": "test_8473",
+    "title": "Add tests for drift_monitoring_cli.py",
+    "description": "No corresponding test file found for drift_monitoring_cli.py",
+    "category": "testing",
+    "effort": 3.0,
+    "business_value": 7,
+    "time_criticality": 4,
+    "risk_reduction": 8,
+    "files": [
+      "/root/repo/src/drift_monitoring_cli.py"
+    ],
+    "score": 6.333333333333333
+  },
+  {
+    "id": "test_7479",
+    "title": "Add tests for explainability_cli.py",
+    "description": "No corresponding test file found for explainability_cli.py",
+    "category": "testing",
+    "effort": 3.0,
+    "business_value": 7,
+    "time_criticality": 4,
+    "risk_reduction": 8,
+    "files": [
+      "/root/repo/src/explainability_cli.py"
+    ],
+    "score": 6.333333333333333
+  },
+  {
+    "id": "test_4166",
+    "title": "Add tests for model_api_cli.py",
+    "description": "No corresponding test file found for model_api_cli.py",
+    "category": "testing",
+    "effort": 3.0,
+    "business_value": 7,
+    "time_criticality": 4,
+    "risk_reduction": 8,
+    "files": [
+      "/root/repo/src/model_api_cli.py"
+    ],
+    "score": 6.333333333333333
+  },
+  {
+    "id": "test_1084",
+    "title": "Add tests for performance_monitor_cli.py",
+    "description": "No corresponding test file found for performance_monitor_cli.py",
+    "category": "testing",
+    "effort": 3.0,
+    "business_value": 7,
+    "time_criticality": 4,
+    "risk_reduction": 8,
+    "files": [
+      "/root/repo/src/performance_monitor_cli.py"
+    ],
+    "score": 6.333333333333333
+  },
+  {
+    "id": "test_5797",
+    "title": "Add tests for security_utils.py",
+    "description": "No corresponding test file found for security_utils.py",
+    "category": "testing",
+    "effort": 3.0,
+    "business_value": 7,
+    "time_criticality": 4,
+    "risk_reduction": 8,
+    "files": [
+      "/root/repo/src/security_utils.py"
+    ],
+    "score": 6.333333333333333
+  },
+  {
+    "id": "test_1419",
+    "title": "Add tests for streaming_cli.py",
+    "description": "No corresponding test file found for streaming_cli.py",
+    "category": "testing",
+    "effort": 3.0,
+    "business_value": 7,
+    "time_criticality": 4,
+    "risk_reduction": 8,
+    "files": [
+      "/root/repo/src/streaming_cli.py"
+    ],
+    "score": 6.333333333333333
+  },
+  {
+    "id": "large_8174",
+    "title": "Refactor large file: training_callbacks.py",
+    "description": "File has 301 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 3.01,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/training_callbacks.py"
+    ],
+    "score": 5.3156146179401995
+  },
+  {
+    "id": "large_3676",
+    "title": "Refactor large file: model_metadata.py",
+    "description": "File has 309 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 3.09,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/model_metadata.py"
+    ],
+    "score": 5.177993527508091
+  },
+  {
+    "id": "large_235",
+    "title": "Refactor large file: cache_manager_cli.py",
+    "description": "File has 326 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 3.26,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/cache_manager_cli.py"
+    ],
+    "score": 4.9079754601226995
+  },
+  {
+    "id": "large_1084",
+    "title": "Refactor large file: performance_monitor_cli.py",
+    "description": "File has 340 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 3.4,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/performance_monitor_cli.py"
+    ],
+    "score": 4.705882352941177
+  },
+  {
+    "id": "large_2213",
+    "title": "Refactor large file: streaming_processor.py",
+    "description": "File has 368 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 3.68,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/streaming_processor.py"
+    ],
+    "score": 4.3478260869565215
+  },
+  {
+    "id": "large_6971",
+    "title": "Refactor large file: train_autoencoder.py",
+    "description": "File has 408 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 4.08,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/train_autoencoder.py"
+    ],
+    "score": 3.9215686274509802
+  },
+  {
+    "id": "large_7491",
+    "title": "Refactor large file: model_serving_api.py",
+    "description": "File has 500 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 5.0,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/model_serving_api.py"
+    ],
+    "score": 3.2
+  },
+  {
+    "id": "large_7479",
+    "title": "Refactor large file: explainability_cli.py",
+    "description": "File has 515 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 5.15,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/explainability_cli.py"
+    ],
+    "score": 3.1067961165048543
+  },
+  {
+    "id": "large_8473",
+    "title": "Refactor large file: drift_monitoring_cli.py",
+    "description": "File has 523 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 5.23,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/drift_monitoring_cli.py"
+    ],
+    "score": 3.0592734225621414
+  },
+  {
+    "id": "large_2370",
+    "title": "Refactor large file: flexible_autoencoder.py",
+    "description": "File has 575 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 5.75,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/flexible_autoencoder.py"
+    ],
+    "score": 2.782608695652174
+  },
+  {
+    "id": "large_2786",
+    "title": "Refactor large file: visualize.py",
+    "description": "File has 585 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 5.85,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/visualize.py"
+    ],
+    "score": 2.735042735042735
+  },
+  {
+    "id": "large_7022",
+    "title": "Refactor large file: data_drift_detector.py",
+    "description": "File has 624 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 6.24,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/data_drift_detector.py"
+    ],
+    "score": 2.564102564102564
+  },
+  {
+    "id": "large_2510",
+    "title": "Refactor large file: model_explainability.py",
+    "description": "File has 637 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 6.37,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/model_explainability.py"
+    ],
+    "score": 2.511773940345369
+  },
+  {
+    "id": "large_9541",
+    "title": "Refactor large file: data_preprocessor.py",
+    "description": "File has 638 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 6.38,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/data_preprocessor.py"
+    ],
+    "score": 2.5078369905956115
+  },
+  {
+    "id": "large_5797",
+    "title": "Refactor large file: security_utils.py",
+    "description": "File has 650 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 6.5,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/security_utils.py"
+    ],
+    "score": 2.4615384615384617
+  },
+  {
+    "id": "large_9592",
+    "title": "Refactor large file: logging_config.py",
+    "description": "File has 709 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 7.09,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/logging_config.py"
+    ],
+    "score": 2.2566995768688294
+  },
+  {
+    "id": "large_330",
+    "title": "Refactor large file: data_validator.py",
+    "description": "File has 807 lines - consider breaking into smaller modules",
+    "category": "code_quality",
+    "effort": 8.07,
+    "business_value": 7,
+    "time_criticality": 3,
+    "risk_reduction": 6,
+    "files": [
+      "/root/repo/src/data_validator.py"
+    ],
+    "score": 1.9826517967781907
+  }
+]

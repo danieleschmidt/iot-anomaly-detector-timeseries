@@ -1,0 +1,229 @@
+# Terragon Autonomous SDLC Value Discovery Configuration
+# Advanced Repository Configuration (85%+ SDLC Maturity)
+
+repository:
+  name: "iot-anomaly-detector-timeseries"
+  maturity_level: "advanced"  # nascent | developing | maturing | advanced
+  current_maturity_score: 85
+  target_maturity_score: 95
+  primary_language: "python"
+  framework: "tensorflow"
+  domain: "ml-iot"
+
+scoring:
+  # Adaptive weights based on repository maturity level
+  weights:
+    advanced:  # Current configuration for this mature ML/AI repository
+      wsjf: 0.5        # Weighted Shortest Job First - good for mature backlog
+      ice: 0.1         # Impact-Confidence-Ease - less critical for mature repos
+      technicalDebt: 0.3  # Higher weight for tech debt in mature systems
+      security: 0.1    # Consistent security priority
+  
+  # Score thresholds and multipliers
+  thresholds:
+    minScore: 15          # Higher minimum for advanced repos
+    maxRisk: 0.7          # Lower risk tolerance for production systems
+    securityBoost: 2.5    # Higher security multiplier for ML systems
+    complianceBoost: 2.0  # ML/AI compliance requirements
+    performanceBoost: 1.8 # Performance critical for ML inference
+    
+  # Priority categories for ML/AI workloads
+  categories:
+    model_performance:
+      weight: 1.8
+      keywords: ["inference", "training", "accuracy", "latency", "throughput"]
+    
+    data_pipeline:
+      weight: 1.6
+      keywords: ["preprocessing", "validation", "streaming", "batch"]
+    
+    monitoring:
+      weight: 1.7
+      keywords: ["drift", "performance", "metrics", "observability"]
+      
+    security_ml:
+      weight: 2.2
+      keywords: ["model_security", "data_protection", "adversarial", "privacy"]
+
+discovery:
+  # Multi-source signal harvesting
+  sources:
+    - name: "gitHistory"
+      enabled: true
+      config:
+        look_back_days: 90
+        commit_patterns: ["quick fix", "temporary", "hack", "TODO", "FIXME"]
+        hot_spot_threshold: 10  # Files changed >10 times
+        
+    - name: "staticAnalysis" 
+      enabled: true
+      tools:
+        - name: "ruff"
+          enabled: true
+          weight: 1.0
+        - name: "bandit"
+          enabled: true
+          weight: 1.5  # Higher weight for security
+        - name: "mypy"
+          enabled: true
+          weight: 1.2
+          
+    - name: "codeComments"
+      enabled: true
+      patterns: ["TODO", "FIXME", "XXX", "HACK", "BUG", "DEPRECATED"]
+      weight: 1.0
+      
+    - name: "dependencies"
+      enabled: true
+      config:
+        vulnerability_check: true
+        outdated_check: true
+        security_weight: 2.0
+        
+    - name: "performanceMetrics"
+      enabled: true
+      config:
+        memory_threshold_mb: 1000
+        latency_threshold_ms: 100
+        cpu_threshold_percent: 80
+        
+    - name: "testCoverage"
+      enabled: true
+      config:
+        minimum_coverage: 90
+        critical_path_coverage: 95
+
+# Execution configuration
+execution:
+  # Conservative approach for mature ML systems
+  maxConcurrentTasks: 1
+  
+  # Quality gates
+  qualityGates:
+    minTestCoverage: 90
+    maxPerformanceRegression: 5  # 5% max regression
+    requiresSecurityScan: true
+    requiresTypeCheck: true
+    
+  # Rollback triggers
+  rollbackTriggers:
+    - testFailure
+    - buildFailure
+    - securityViolation
+    - performanceRegression
+    - coverageDecrease
+    
+  # Pre-execution validation
+  preValidation:
+    - checkDependencies
+    - validateEnvironment
+    - runSecurityScan
+    - checkModelIntegrity
+    
+  # Post-execution validation  
+  postValidation:
+    - runFullTestSuite
+    - validateModelPerformance
+    - checkSecurityPosture
+    - validateDocumentation
+
+# Continuous learning configuration
+learning:
+  # Feedback collection
+  collectMetrics: true
+  trackPredictionAccuracy: true
+  adjustWeightsAutomatically: true
+  
+  # Model recalibration
+  recalibrationTrigger:
+    accuracyThreshold: 0.7  # Recalibrate if accuracy drops below 70%
+    completedTasksThreshold: 20  # Recalibrate after 20 completed tasks
+    timeThreshold: 604800  # Recalibrate weekly (seconds)
+    
+  # Learning data retention
+  dataRetention:
+    executionHistory: 180  # days
+    metricsHistory: 365    # days
+    learningPatterns: -1   # indefinite
+
+# Integration settings
+integrations:
+  github:
+    enabled: true
+    createPRs: true
+    assignReviewers: true
+    useTemplates: true
+    
+  monitoring:
+    enabled: true
+    metricsEndpoint: "/metrics"
+    healthCheckEndpoint: "/health"
+    
+  notifications:
+    enabled: true
+    channels: ["slack", "email"]
+    highPriorityThreshold: 50
+    
+# ML/AI specific configurations
+ml_config:
+  model_validation:
+    enabled: true
+    requiresBaselineComparison: true
+    acceptablePerformanceDrop: 2  # 2% max performance drop
+    
+  data_validation:
+    enabled: true
+    schemaValidation: true
+    driftDetection: true
+    driftThreshold: 0.1
+    
+  experiment_tracking:
+    enabled: true
+    trackHyperparameters: true
+    trackMetrics: true
+    trackArtifacts: true
+
+# Value tracking metrics
+metrics:
+  businessValue:
+    userImpact: [1, 10]
+    maintainabilityGain: [1, 10] 
+    featureCompleteness: [1, 10]
+    
+  timeCriticality:
+    urgency: [1, 10]
+    blockingOtherWork: [1, 10]
+    securityImplications: [1, 10]
+    
+  riskReduction:
+    stabilityImprovement: [1, 10]
+    securityImprovement: [1, 10]
+    technicalDebtReduction: [1, 10]
+    
+  effortEstimation:
+    implementationComplexity: [1, 10]
+    testingEffort: [1, 10]
+    documentationEffort: [1, 10]
+
+# Advanced features for mature repositories
+advanced_features:
+  architecture_analysis:
+    enabled: true
+    detectAntiPatterns: true
+    suggestRefactoring: true
+    
+  performance_optimization:
+    enabled: true
+    profileMemoryUsage: true
+    optimizeLatency: true
+    
+  security_hardening:
+    enabled: true
+    scanForVulnerabilities: true
+    validateInputSanitization: true
+    checkDataProtection: true
+    
+  compliance:
+    enabled: true
+    frameworks: ["GDPR", "SOC2", "ISO27001"]
+    trackComplianceDebt: true
