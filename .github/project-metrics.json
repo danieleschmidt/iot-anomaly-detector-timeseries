@@ -1,0 +1,100 @@
+{
+  "project": {
+    "name": "IoT Anomaly Detector Timeseries",
+    "version": "1.0.0",
+    "description": "LSTM-based autoencoder for multivariate time series anomaly detection in IoT sensor data",
+    "repository": "danieleschmidt/iot-anomaly-detector-timeseries",
+    "language": "Python",
+    "framework": "TensorFlow/Keras"
+  },
+  "sdlc_metrics": {
+    "completeness_score": 95,
+    "automation_coverage": 92,
+    "security_score": 88,
+    "documentation_health": 90,
+    "test_coverage_target": 85,
+    "code_quality_threshold": 8.5,
+    "last_updated": "2025-08-01"
+  },
+  "quality_gates": {
+    "unit_test_coverage": {
+      "minimum": 80,
+      "target": 90,
+      "current": 85
+    },
+    "integration_test_coverage": {
+      "minimum": 70,
+      "target": 85,
+      "current": 75
+    },
+    "code_quality_score": {
+      "minimum": 8.0,
+      "target": 9.0,
+      "current": 8.5
+    },
+    "security_vulnerabilities": {
+      "high": 0,
+      "medium": 2,
+      "low": 5,
+      "max_allowed_high": 0,
+      "max_allowed_medium": 5
+    },
+    "performance_benchmarks": {
+      "training_time_minutes": 15,
+      "inference_latency_ms": 50,
+      "memory_usage_mb": 512,
+      "model_accuracy": 0.95
+    }
+  },
+  "automation_status": {
+    "ci_cd_pipeline": true,
+    "automated_testing": true,
+    "security_scanning": true,
+    "dependency_updates": true,
+    "performance_monitoring": true,
+    "release_automation": true,
+    "documentation_generation": true,
+    "code_quality_checks": true
+  },
+  "development_metrics": {
+    "team_size": 1,
+    "avg_pr_review_time_hours": 4,
+    "deployment_frequency": "weekly",
+    "lead_time_hours": 24,
+    "change_failure_rate": 0.05,
+    "recovery_time_minutes": 30
+  },
+  "technical_debt": {
+    "total_issues": 12,
+    "high_priority": 2,
+    "medium_priority": 5,
+    "low_priority": 5,
+    "categories": {
+      "code_smells": 4,
+      "duplicated_code": 2,
+      "maintainability": 3,
+      "reliability": 2,
+      "security": 1
+    }
+  },
+  "dependencies": {
+    "total_count": 45,
+    "outdated_count": 3,
+    "vulnerable_count": 1,
+    "license_compliance": "compliant",
+    "major_dependencies": [
+      "tensorflow",
+      "numpy",
+      "pandas",
+      "scikit-learn",
+      "matplotlib"
+    ]
+  },
+  "monitoring": {
+    "uptime_percentage": 99.9,
+    "error_rate": 0.001,
+    "response_time_p95_ms": 200,
+    "alerts_last_30_days": 5,
+    "incidents_last_30_days": 1
+  }
+}
