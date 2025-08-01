@@ -78,13 +78,14 @@ This document provides a comprehensive summary of the Terragon SDLC implementati
   - Existing monitoring configuration files ✓
 
 ### CHECKPOINT 6: Workflow Documentation & Templates ✅ COMPLETED
-- **✅ GitHub Actions Workflows**
-  - Copied all workflow templates to `.github/workflows/`:
-    - `ci.yml` - Comprehensive CI pipeline ✓
-    - `dependency-update.yml` - Automated dependency management ✓
-    - `release.yml` - Release automation ✓
-    - `security.yml` - Advanced security scanning ✓
-    - `performance.yml` - Performance testing and benchmarking ✓
+- **⚠️ GitHub Actions Workflows** (Manual Setup Required)
+  - Workflow templates created and ready for deployment:
+    - `ci.yml` - Comprehensive CI pipeline
+    - `dependency-update.yml` - Automated dependency management  
+    - `release.yml` - Release automation
+    - `security.yml` - Advanced security scanning
+    - `performance.yml` - Performance testing and benchmarking
+  - **Note**: Files removed from commit due to GitHub App workflow permissions
 
 - **✅ Comprehensive Documentation**
   - Created detailed CI/CD Setup Guide (`docs/workflows/CI_CD_SETUP.md`)
