@@ -1,0 +1,110 @@
+{
+  "repository_info": {
+    "name": "iot-anomaly-detector-timeseries",
+    "maturity_before": 85,
+    "maturity_after": 87,
+    "last_updated": "2025-08-01T14:30:38.131522"
+  },
+  "continuous_value_metrics": {
+    "total_items_discovered": 28,
+    "total_items_completed": 3,
+    "total_items_in_progress": 0,
+    "average_cycle_time_hours": 0,
+    "value_delivered_score": 33.0,
+    "technical_debt_reduction": 0,
+    "security_improvements": 6,
+    "performance_gains_percent": 0,
+    "code_quality_improvement": 5,
+    "test_coverage_improvement": 0
+  },
+  "discovery_metrics": {
+    "discovery_cycles_run": 1,
+    "last_discovery_time": "2025-08-01T14:28:43.939166",
+    "items_per_cycle": {
+      "avg": 28,
+      "min": 28,
+      "max": 28,
+      "trend": "stable"
+    },
+    "sources_active": 5,
+    "categories_tracked": 3
+  },
+  "execution_metrics": {
+    "success_rate": 1.0,
+    "failure_rate": 0.0,
+    "avg_execution_time": 0.10000000000000002,
+    "total_execution_time": 0.30000000000000004,
+    "rollback_count": 0,
+    "quality_gate_failures": 0,
+    "total_executions": 3,
+    "total_successes": 3
+  },
+  "learning_metrics": {
+    "estimation_accuracy": 0.5,
+    "value_prediction_accuracy": 0.5,
+    "false_positive_rate": 0.0,
+    "adaptation_cycles": 1,
+    "scoring_adjustments": 0,
+    "learning_velocity": "initial"
+  },
+  "operational_metrics": {
+    "autonomous_pr_success_rate": 0.0,
+    "human_intervention_required": 0.0,
+    "rollback_rate": 0.0,
+    "mean_time_to_value": 0.0,
+    "infrastructure_uptime": 100.0,
+    "monitoring_coverage": 95.0
+  },
+  "category_performance": {
+    "technical_debt": {
+      "items_discovered": 0,
+      "items_completed": 0,
+      "avg_impact": 0.0,
+      "success_rate": 0.0
+    },
+    "security": {
+      "items_discovered": 0,
+      "items_completed": 0,
+      "avg_impact": 0.0,
+      "success_rate": 0.0
+    },
+    "performance": {
+      "items_discovered": 0,
+      "items_completed": 0,
+      "avg_impact": 0.0,
+      "success_rate": 0.0
+    },
+    "testing": {
+      "items_discovered": 8,
+      "items_completed": 0,
+      "avg_impact": 0.0,
+      "success_rate": 0.0
+    },
+    "code_quality": {
+      "items_discovered": 17,
+      "items_completed": 0,
+      "avg_impact": 0.0,
+      "success_rate": 0.0
+    },
+    "dependencies": {
+      "items_discovered": 3,
+      "items_completed": 0,
+      "avg_impact": 0.0,
+      "success_rate": 0.0
+    }
+  },
+  "trend_analysis": {
+    "velocity_trend": "stable",
+    "quality_trend": "improving",
+    "debt_trend": "reducing",
+    "security_trend": "stable",
+    "innovation_trend": "initial"
+  },
+  "business_impact": {
+    "estimated_value_delivered": 0,
+    "cost_savings": 0,
+    "risk_reduction_score": 15,
+    "time_saved_hours": 0,
+    "developer_productivity_gain": 5
+  }
+}
