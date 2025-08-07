@@ -14,6 +14,10 @@ try:
     TENSORFLOW_AVAILABLE = True
 except ImportError:
     TENSORFLOW_AVAILABLE = False
+    # Create mock Model for when TensorFlow is not available
+    class Model:
+        def __init__(self, *args, **kwargs):
+            pass
 
 from .logging_config import get_logger
 

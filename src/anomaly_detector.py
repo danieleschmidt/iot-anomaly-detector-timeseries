@@ -4,7 +4,13 @@ import argparse
 from pathlib import Path
 import numpy as np
 import pandas as pd
-from tensorflow.keras.models import load_model
+try:
+    from tensorflow.keras.models import load_model
+    TENSORFLOW_AVAILABLE = True
+except ImportError:
+    TENSORFLOW_AVAILABLE = False
+    def load_model(*args, **kwargs):
+        return None
 
 from .data_preprocessor import DataPreprocessor
 from .logging_config import get_logger
