@@ -1,0 +1,53 @@
+# Development Configuration for IoT Anomaly Detection System
+
+core:
+  window_size: 30
+  lstm_units: 32
+  latent_dim: 16
+  batch_size: 32
+  epochs: 50
+  threshold_factor: 3.0
+  anomaly_start: 200
+  anomaly_length: 20
+  anomaly_magnitude: 3.0
+
+database:
+  host: "localhost"
+  port: 5432
+  database: "anomaly_detection_dev"
+  username: "dev_user"
+  connection_pool_size: 5
+  connection_timeout: 30
+
+cache:
+  enabled: true
+  backend: "memory"
+  ttl_seconds: 1800
+  max_memory_mb: 128
+
+monitoring:
+  enabled: true
+  metrics_port: 8080
+  health_check_interval: 60
+  log_level: "DEBUG"
+  export_metrics: false
+  alert_thresholds:
+    cpu_usage: 90.0
+    memory_usage: 90.0
+    disk_usage: 95.0
+    error_rate: 0.10
+
+security:
+  enable_authentication: false
+  rate_limit_per_minute: 10000
+  cors_origins:
+    - "*"
+  enable_ssl: false
+
+model:
+  auto_retrain: false
+  retrain_threshold: 0.20
+  model_registry_path: "saved_models"
+  backup_models: 3
+  validation_split: 0.2
+  early_stopping_patience: 5

@@ -1,0 +1,58 @@
+# Production Configuration for IoT Anomaly Detection System
+
+core:
+  window_size: 30
+  lstm_units: 64
+  latent_dim: 32
+  batch_size: 64
+  epochs: 200
+  threshold_factor: 2.5
+  anomaly_start: 200
+  anomaly_length: 20
+  anomaly_magnitude: 3.0
+
+database:
+  host: "prod-db.internal"
+  port: 5432
+  database: "anomaly_detection_prod"
+  username: "iot_service"
+  connection_pool_size: 20
+  connection_timeout: 30
+
+cache:
+  enabled: true
+  backend: "redis"
+  redis_host: "redis-cluster.internal"
+  redis_port: 6379
+  redis_db: 0
+  ttl_seconds: 7200
+  max_memory_mb: 1024
+
+monitoring:
+  enabled: true
+  metrics_port: 8080
+  health_check_interval: 15
+  log_level: "INFO"
+  export_metrics: true
+  alert_thresholds:
+    cpu_usage: 80.0
+    memory_usage: 85.0
+    disk_usage: 90.0
+    error_rate: 0.01
+
+security:
+  enable_authentication: true
+  jwt_expiry_hours: 8
+  rate_limit_per_minute: 1000
+  cors_origins:
+    - "https://dashboard.company.com"
+    - "https://api.company.com"
+  enable_ssl: true
+
+model:
+  auto_retrain: true
+  retrain_threshold: 0.10
+  model_registry_path: "/opt/models"
+  backup_models: 10
+  validation_split: 0.15
+  early_stopping_patience: 15

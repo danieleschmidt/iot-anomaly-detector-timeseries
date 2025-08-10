@@ -75,6 +75,115 @@ class StructuredFormatter(logging.Formatter):
         return formatted
 
 
+class EnhancedStructuredFormatter(logging.Formatter):
+    """Enhanced formatter with JSON-like structured output and correlation IDs."""
+    
+    def __init__(self, include_json: bool = False):
+        self.include_json = include_json
+        super().__init__(
+            fmt='%(asctime)s | %(levelname)-8s | %(name)-20s | %(correlation_id)s | %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+    
+    def format(self, record) -> str:
+        """Format log record with enhanced structured data."""
+        # Add correlation ID if not present
+        if not hasattr(record, 'correlation_id'):
+            record.correlation_id = getattr(threading.current_thread(), 'correlation_id', 'none')
+        
+        # Add process and thread info
+        if not hasattr(record, 'process_id'):
+            record.process_id = os.getpid()
+        if not hasattr(record, 'thread_id'):
+            record.thread_id = threading.get_ident()
+        
+        # Format base message
+        formatted = super().format(record)
+        
+        # Add structured data
+        if self.include_json:
+            import json
+            extra_data = {}
+            for key, value in record.__dict__.items():
+                if key not in ['name', 'msg', 'args', 'levelname', 'levelno', 
+                              'pathname', 'filename', 'module', 'lineno', 'funcName',
+                              'created', 'msecs', 'relativeCreated', 'thread',
+                              'threadName', 'processName', 'process', 'getMessage',
+                              'exc_info', 'exc_text', 'stack_info', 'asctime', 'taskName',
+                              'correlation_id', 'process_id', 'thread_id']:
+                    try:
+                        json.dumps(value)  # Test if serializable
+                        extra_data[key] = value
+                    except (TypeError, ValueError):
+                        extra_data[key] = str(value)
+            
+            if extra_data:
+                formatted += f" | {json.dumps(extra_data, separators=(',', ':'))}"
+        
+        return formatted
+
+
+class ContextualFilter(logging.Filter):
+    """Filter to add contextual information to log records."""
+    
+    def __init__(self):
+        super().__init__()
+        self.hostname = self._get_hostname()
+        self.service_name = os.getenv('IOT_SERVICE_NAME', 'anomaly_detector')
+        
+    def _get_hostname(self) -> str:
+        """Get system hostname."""
+        import socket
+        try:
+            return socket.gethostname()
+        except:
+            return 'unknown'
+    
+    def filter(self, record) -> bool:
+        """Add contextual information to log records."""
+        # Add system context
+        record.hostname = self.hostname
+        record.service_name = self.service_name
+        
+        # Add correlation ID from thread-local storage
+        thread = threading.current_thread()
+        record.correlation_id = getattr(thread, 'correlation_id', 'none')
+        
+        # Add request context if available (for web requests)
+        record.request_id = getattr(thread, 'request_id', None)
+        record.user_id = getattr(thread, 'user_id', None)
+        record.session_id = getattr(thread, 'session_id', None)
+        
+        # Add performance context
+        record.process_id = os.getpid()
+        record.thread_id = threading.get_ident()
+        
+        return True
+
+
+class CorrelationContext:
+    """Context manager for setting correlation ID in thread-local storage."""
+    
+    def __init__(self, correlation_id: str):
+        self.correlation_id = correlation_id
+        self.previous_correlation_id = None
+    
+    def __enter__(self):
+        """Set correlation ID for current thread."""
+        thread = threading.current_thread()
+        self.previous_correlation_id = getattr(thread, 'correlation_id', None)
+        thread.correlation_id = self.correlation_id
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Restore previous correlation ID."""
+        thread = threading.current_thread()
+        if self.previous_correlation_id is not None:
+            thread.correlation_id = self.previous_correlation_id
+        elif hasattr(thread, 'correlation_id'):
+            delattr(thread, 'correlation_id')
+
+
 def setup_logging(
     level: str = "INFO",
     log_file: Optional[str] = None,
@@ -165,6 +274,49 @@ def setup_logging_from_config() -> None:
     )
 
 
+def setup_logging(name: str = None, level: str = "INFO") -> logging.Logger:
+    """Get a logger instance with enhanced structured logging capabilities.
+    
+    Parameters
+    ----------
+    name : str, optional
+        Logger name (typically __name__ or module name)
+    level : str
+        Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        
+    Returns
+    -------
+    logging.Logger
+        Configured logger instance with structured logging
+    """
+    logger_name = name or __name__
+    logger = logging.getLogger(logger_name)
+    
+    # Don't reconfigure if already configured
+    if logger.handlers:
+        return logger
+    
+    # Set level
+    numeric_level = getattr(logging, level.upper(), logging.INFO)
+    logger.setLevel(numeric_level)
+    
+    # Create enhanced formatter with JSON-like structure
+    formatter = EnhancedStructuredFormatter()
+    
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(numeric_level)
+    console_handler.setFormatter(formatter)
+    console_handler.addFilter(SensitiveDataFilter())
+    
+    logger.addHandler(console_handler)
+    
+    # Add contextual information processor
+    logger.addFilter(ContextualFilter())
+    
+    return logger
+
+
 def get_logger(name: str) -> logging.Logger:
     """Get a logger instance with the specified name.
     
@@ -178,11 +330,7 @@ def get_logger(name: str) -> logging.Logger:
     logging.Logger
         Configured logger instance
     """
-    logger = logging.getLogger(name)
-    # Ensure the logger inherits from root logger but has appropriate level
-    if not logger.handlers:
-        logger.setLevel(logging.NOTSET)  # This makes it inherit from parent
-    return logger
+    return setup_logging(name)
 
 
 def log_function_call(func):
