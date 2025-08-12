@@ -274,7 +274,7 @@ def setup_logging_from_config() -> None:
     )
 
 
-def setup_logging(name: str = None, level: str = "INFO") -> logging.Logger:
+def get_logger(name: str = None, level: str = "INFO") -> logging.Logger:
     """Get a logger instance with enhanced structured logging capabilities.
     
     Parameters
@@ -317,20 +317,6 @@ def setup_logging(name: str = None, level: str = "INFO") -> logging.Logger:
     return logger
 
 
-def get_logger(name: str) -> logging.Logger:
-    """Get a logger instance with the specified name.
-    
-    Parameters
-    ----------
-    name : str
-        Logger name (typically __name__ or module name)
-        
-    Returns
-    -------
-    logging.Logger
-        Configured logger instance
-    """
-    return setup_logging(name)
 
 
 def log_function_call(func):
