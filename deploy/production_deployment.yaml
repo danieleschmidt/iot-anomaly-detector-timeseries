@@ -1,0 +1,353 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: iot-anomaly-detection
+  labels:
+    name: iot-anomaly-detection
+    environment: production
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anomaly-detection-api
+  namespace: iot-anomaly-detection
+  labels:
+    app: anomaly-detection-api
+    version: v1.0.0
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: anomaly-detection-api
+  template:
+    metadata:
+      labels:
+        app: anomaly-detection-api
+        version: v1.0.0
+    spec:
+      serviceAccountName: anomaly-detection-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      containers:
+      - name: anomaly-detection-api
+        image: terragonlabs/iot-anomaly-detector:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: url
+        - name: MODEL_PATH
+          value: "/app/models"
+        - name: MAX_WORKERS
+          value: "8"
+        - name: ENABLE_QUANTUM
+          value: "true"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        volumeMounts:
+        - name: model-storage
+          mountPath: /app/models
+          readOnly: true
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: model-storage-pvc
+      - name: config
+        configMap:
+          name: anomaly-detection-config
+      - name: tmp
+        emptyDir: {}
+      nodeSelector:
+        node-type: compute-optimized
+      tolerations:
+      - key: "compute-optimized"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: anomaly-detection-api
+  namespace: iot-anomaly-detection
+  labels:
+    app: anomaly-detection-api
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  selector:
+    app: anomaly-detection-api
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: anomaly-detection-sa
+  namespace: iot-anomaly-detection
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: iot-anomaly-detection
+  name: anomaly-detection-role
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: anomaly-detection-rolebinding
+  namespace: iot-anomaly-detection
+subjects:
+- kind: ServiceAccount
+  name: anomaly-detection-sa
+  namespace: iot-anomaly-detection
+roleRef:
+  kind: Role
+  name: anomaly-detection-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-storage-pvc
+  namespace: iot-anomaly-detection
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: anomaly-detection-config
+  namespace: iot-anomaly-detection
+data:
+  config.yaml: |
+    api:
+      host: 0.0.0.0
+      port: 8080
+      workers: 8
+      timeout: 300
+    
+    detection:
+      window_size: 30
+      batch_size: 32
+      enable_quantum: true
+      enable_caching: true
+      cache_ttl: 3600
+    
+    performance:
+      max_queue_size: 1000
+      auto_scaling: true
+      metrics_enabled: true
+    
+    security:
+      enable_authentication: true
+      rate_limiting: true
+      max_requests_per_minute: 1000
+    
+    monitoring:
+      prometheus_enabled: true
+      logging_level: INFO
+      health_check_interval: 30
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: anomaly-detection-ingress
+  namespace: iot-anomaly-detection
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "1000"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+    - api.anomaly-detection.terragonlabs.com
+    secretName: anomaly-detection-tls
+  rules:
+  - host: api.anomaly-detection.terragonlabs.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: anomaly-detection-api
+            port:
+              number: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: anomaly-detection-hpa
+  namespace: iot-anomaly-detection
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: anomaly-detection-api
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-credentials
+  namespace: iot-anomaly-detection
+type: Opaque
+data:
+  url: cmVkaXM6Ly91c2VyOkFCQ0RAcmVkaXMuZXhhbXBsZS5jb206NjM3OS8w  # base64: redis://user:ABCD@redis.example.com:6379/0
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: anomaly-detection-pdb
+  namespace: iot-anomaly-detection
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: anomaly-detection-api
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: anomaly-detection-netpol
+  namespace: iot-anomaly-detection
+spec:
+  podSelector:
+    matchLabels:
+      app: anomaly-detection-api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app: monitoring
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 9090
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
