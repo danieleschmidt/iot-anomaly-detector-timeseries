@@ -1,0 +1,38 @@
+# Monitoring service image
+FROM python:3.12-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Create non-root user
+RUN groupadd -r monitor && useradd -r -g monitor monitor
+
+# Copy monitoring code
+COPY robust_monitoring_system.py comprehensive_error_handling.py ./
+COPY intelligent_resource_manager.py ./
+
+# Set ownership
+RUN chown -R monitor:monitor /app
+
+# Switch to non-root user
+USER monitor
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import robust_monitoring_system; print('OK')" || exit 1
+
+# Expose port
+EXPOSE 8002
+
+# Start monitoring
+CMD ["python", "robust_monitoring_system.py"]

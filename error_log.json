@@ -1,0 +1,134 @@
+[
+  {
+    "timestamp": "2025-08-13T23:34:37.047150",
+    "function_name": "predict",
+    "error_type": "ValueError",
+    "error_message": "Model not loaded",
+    "severity": "medium",
+    "recovery_strategy": "graceful_degradation",
+    "stack_trace": "Traceback (most recent call last):\n  File \"/root/repo/comprehensive_error_handling.py\", line 336, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/repo/comprehensive_error_handling.py\", line 468, in predict\n    raise ValueError(\"Model not loaded\")\nValueError: Model not loaded\n",
+    "metadata": {
+      "fallback_value": "[0.5]"
+    }
+  },
+  {
+    "timestamp": "2025-08-13T23:34:37.048525",
+    "function_name": "predict",
+    "error_type": "ValueError",
+    "error_message": "Model not loaded",
+    "severity": "medium",
+    "recovery_strategy": "graceful_degradation",
+    "stack_trace": "Traceback (most recent call last):\n  File \"/root/repo/comprehensive_error_handling.py\", line 336, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/repo/comprehensive_error_handling.py\", line 468, in predict\n    raise ValueError(\"Model not loaded\")\nValueError: Model not loaded\n",
+    "metadata": {
+      "fallback_value": "[0.5]"
+    }
+  },
+  {
+    "timestamp": "2025-08-13T23:34:37.051783",
+    "function_name": "predict",
+    "error_type": "ValueError",
+    "error_message": "Model not loaded",
+    "severity": "medium",
+    "recovery_strategy": "graceful_degradation",
+    "stack_trace": "Traceback (most recent call last):\n  File \"/root/repo/comprehensive_error_handling.py\", line 336, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/repo/comprehensive_error_handling.py\", line 468, in predict\n    raise ValueError(\"Model not loaded\")\nValueError: Model not loaded\n",
+    "metadata": {
+      "fallback_value": "[0.5]"
+    }
+  },
+  {
+    "timestamp": "2025-08-13T23:34:37.053018",
+    "function_name": "predict",
+    "error_type": "ValueError",
+    "error_message": "Model not loaded",
+    "severity": "medium",
+    "recovery_strategy": "graceful_degradation",
+    "stack_trace": "Traceback (most recent call last):\n  File \"/root/repo/comprehensive_error_handling.py\", line 336, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/repo/comprehensive_error_handling.py\", line 468, in predict\n    raise ValueError(\"Model not loaded\")\nValueError: Model not loaded\n",
+    "metadata": {
+      "fallback_value": "[0.5]"
+    }
+  },
+  {
+    "timestamp": "2025-08-13T23:34:37.054598",
+    "function_name": "predict",
+    "error_type": "ValueError",
+    "error_message": "Model not loaded",
+    "severity": "medium",
+    "recovery_strategy": "graceful_degradation",
+    "stack_trace": "Traceback (most recent call last):\n  File \"/root/repo/comprehensive_error_handling.py\", line 336, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/repo/comprehensive_error_handling.py\", line 468, in predict\n    raise ValueError(\"Model not loaded\")\nValueError: Model not loaded\n",
+    "metadata": {
+      "fallback_value": "[0.5]"
+    }
+  },
+  {
+    "timestamp": "2025-08-13T23:34:49.465930",
+    "function_name": "predict",
+    "error_type": "ValueError",
+    "error_message": "Model not loaded",
+    "severity": "medium",
+    "recovery_strategy": "graceful_degradation",
+    "stack_trace": "Traceback (most recent call last):\n  File \"/root/repo/comprehensive_error_handling.py\", line 336, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/repo/comprehensive_error_handling.py\", line 468, in predict\n    raise ValueError(\"Model not loaded\")\nValueError: Model not loaded\n",
+    "metadata": {
+      "fallback_value": "[0.5]"
+    }
+  },
+  {
+    "timestamp": "2025-08-13T23:34:49.469301",
+    "function_name": "predict",
+    "error_type": "ValueError",
+    "error_message": "Model not loaded",
+    "severity": "medium",
+    "recovery_strategy": "graceful_degradation",
+    "stack_trace": "Traceback (most recent call last):\n  File \"/root/repo/comprehensive_error_handling.py\", line 336, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/repo/comprehensive_error_handling.py\", line 468, in predict\n    raise ValueError(\"Model not loaded\")\nValueError: Model not loaded\n",
+    "metadata": {
+      "fallback_value": "[0.5]"
+    }
+  },
+  {
+    "timestamp": "2025-08-13T23:34:49.470514",
+    "function_name": "predict",
+    "error_type": "ValueError",
+    "error_message": "Model not loaded",
+    "severity": "medium",
+    "recovery_strategy": "graceful_degradation",
+    "stack_trace": "Traceback (most recent call last):\n  File \"/root/repo/comprehensive_error_handling.py\", line 336, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/repo/comprehensive_error_handling.py\", line 468, in predict\n    raise ValueError(\"Model not loaded\")\nValueError: Model not loaded\n",
+    "metadata": {
+      "fallback_value": "[0.5]"
+    }
+  },
+  {
+    "timestamp": "2025-08-13T23:34:49.472181",
+    "function_name": "predict",
+    "error_type": "ValueError",
+    "error_message": "Model not loaded",
+    "severity": "medium",
+    "recovery_strategy": "graceful_degradation",
+    "stack_trace": "Traceback (most recent call last):\n  File \"/root/repo/comprehensive_error_handling.py\", line 336, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/repo/comprehensive_error_handling.py\", line 468, in predict\n    raise ValueError(\"Model not loaded\")\nValueError: Model not loaded\n",
+    "metadata": {
+      "fallback_value": "[0.5]"
+    }
+  },
+  {
+    "timestamp": "2025-08-13T23:34:49.473394",
+    "function_name": "predict",
+    "error_type": "ValueError",
+    "error_message": "Model not loaded",
+    "severity": "medium",
+    "recovery_strategy": "graceful_degradation",
+    "stack_trace": "Traceback (most recent call last):\n  File \"/root/repo/comprehensive_error_handling.py\", line 336, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/repo/comprehensive_error_handling.py\", line 468, in predict\n    raise ValueError(\"Model not loaded\")\nValueError: Model not loaded\n",
+    "metadata": {
+      "fallback_value": "[0.5]"
+    }
+  },
+  {
+    "timestamp": "2025-08-13T23:37:53.274485",
+    "function_name": "failing_function",
+    "error_type": "Exception",
+    "error_message": "Function always fails",
+    "severity": "medium",
+    "recovery_strategy": "graceful_degradation",
+    "stack_trace": "Traceback (most recent call last):\n  File \"/root/repo/comprehensive_error_handling.py\", line 336, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/repo/integration_test_suite.py\", line 319, in failing_function\n    raise Exception(\"Function always fails\")\nException: Function always fails\n",
+    "metadata": {
+      "fallback_value": "fallback_result"
+    }
+  }
+]
