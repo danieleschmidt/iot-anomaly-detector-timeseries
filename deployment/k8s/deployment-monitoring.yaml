@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: iot-anomaly-detector
+    service: monitoring
+    version: v1
+  name: iot-anomaly-detector-monitoring
+  namespace: iot-anomaly-detector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-anomaly-detector
+      service: monitoring
+  template:
+    metadata:
+      labels:
+        app: iot-anomaly-detector
+        service: monitoring
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              key: ENVIRONMENT
+              name: iot-anomaly-detector-config
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: LOG_LEVEL
+              name: iot-anomaly-detector-config
+        image: iot-anomaly-detector/monitoring:latest
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        name: monitoring
+        ports:
+        - containerPort: 8002
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8002
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 250m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000

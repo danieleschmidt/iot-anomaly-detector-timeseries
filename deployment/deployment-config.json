@@ -1,0 +1,76 @@
+{
+  "name": "iot-anomaly-detector",
+  "environment": "production",
+  "services": [
+    {
+      "name": "api",
+      "type": "web_api",
+      "port": 8000,
+      "replicas": 3,
+      "memory_request": "512Mi",
+      "memory_limit": "1Gi",
+      "cpu_request": "250m",
+      "cpu_limit": "500m",
+      "healthcheck": "CMD-SHELL curl -f http://localhost:8000/health || exit 1"
+    },
+    {
+      "name": "inference",
+      "type": "inference_engine",
+      "port": 8001,
+      "replicas": 2,
+      "memory_request": "1Gi",
+      "memory_limit": "2Gi",
+      "cpu_request": "500m",
+      "cpu_limit": "1000m",
+      "depends_on": [
+        "database",
+        "cache"
+      ]
+    },
+    {
+      "name": "monitoring",
+      "type": "monitoring",
+      "port": 8002,
+      "replicas": 1,
+      "memory_request": "256Mi",
+      "memory_limit": "512Mi",
+      "cpu_request": "100m",
+      "cpu_limit": "250m"
+    },
+    {
+      "name": "database",
+      "type": "database",
+      "port": 5432
+    },
+    {
+      "name": "cache",
+      "type": "cache",
+      "port": 6379
+    }
+  ],
+  "resources": {
+    "total_cpu": "4000m",
+    "total_memory": "8Gi",
+    "storage": "50Gi"
+  },
+  "scaling": {
+    "min_replicas": 2,
+    "max_replicas": 10,
+    "target_cpu_utilization": 70,
+    "target_memory_utilization": 80
+  },
+  "monitoring": {
+    "metrics_enabled": true,
+    "logging_enabled": true,
+    "alerting_enabled": true,
+    "health_checks_enabled": true
+  },
+  "security": {
+    "run_as_non_root": true,
+    "read_only_root_filesystem": true,
+    "drop_capabilities": [
+      "ALL"
+    ],
+    "network_policies_enabled": true
+  }
+}

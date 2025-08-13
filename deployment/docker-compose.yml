@@ -1,0 +1,125 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: deployment/dockerfiles/Dockerfile.web_api
+    container_name: iot-anomaly-detector-api
+    restart: unless-stopped
+    networks:
+    - app-network
+    environment:
+      MODEL_PATH: /app/saved_models
+      LOG_LEVEL: INFO
+      WORKERS: '4'
+    volumes:
+    - models-data:/app/saved_models:ro
+    - logs-data:/app/logs
+    ports:
+    - 8000:8000
+    depends_on: []
+    healthcheck:
+      test: CMD-SHELL curl -f http://localhost:8000/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+  inference:
+    build:
+      context: .
+      dockerfile: deployment/dockerfiles/Dockerfile.inference_engine
+    container_name: iot-anomaly-detector-inference
+    restart: unless-stopped
+    networks:
+    - app-network
+    environment:
+      BATCH_SIZE: '32'
+      MAX_WORKERS: '8'
+      CACHE_SIZE: '10000'
+    volumes:
+    - models-data:/app/saved_models:ro
+    - logs-data:/app/logs
+    ports:
+    - 8001:8001
+    depends_on:
+    - database
+    - cache
+    healthcheck:
+      test: CMD-SHELL exit 0
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+  monitoring:
+    build:
+      context: .
+      dockerfile: deployment/dockerfiles/Dockerfile.monitoring
+    container_name: iot-anomaly-detector-monitoring
+    restart: unless-stopped
+    networks:
+    - app-network
+    environment:
+      MONITORING_INTERVAL: '30'
+      ALERT_WEBHOOK: http://alertmanager:9093
+    volumes:
+    - monitoring-data:/app/data
+    - logs-data:/app/logs
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+    - 8002:8002
+    depends_on: []
+    healthcheck:
+      test: CMD-SHELL exit 0
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+  database:
+    container_name: iot-anomaly-detector-database
+    restart: unless-stopped
+    networks:
+    - app-network
+    environment:
+      POSTGRES_DB: anomaly_detection
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: secure_password_change_me
+    volumes:
+    - postgres-data:/var/lib/postgresql/data
+    ports:
+    - 5432:5432
+    depends_on: []
+    healthcheck:
+      test: CMD-SHELL exit 0
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    image: postgres:15-alpine
+  cache:
+    container_name: iot-anomaly-detector-cache
+    restart: unless-stopped
+    networks:
+    - app-network
+    environment: {}
+    volumes:
+    - redis-data:/data
+    ports:
+    - 6379:6379
+    depends_on: []
+    healthcheck:
+      test: CMD-SHELL exit 0
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+networks:
+  app-network:
+    driver: bridge
+volumes:
+  models-data: {}
+  logs-data: {}
+  monitoring-data: {}
+  postgres-data: {}
+  redis-data: {}

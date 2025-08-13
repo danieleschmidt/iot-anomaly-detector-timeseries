@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: iot-anomaly-detector
+    service: api
+  name: iot-anomaly-detector-api
+  namespace: iot-anomaly-detector
+spec:
+  ports:
+  - port: 8000
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    app: iot-anomaly-detector
+    service: api
+  type: ClusterIP
