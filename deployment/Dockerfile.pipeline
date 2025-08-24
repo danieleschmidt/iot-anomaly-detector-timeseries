@@ -1,0 +1,90 @@
+# Multi-stage Dockerfile for IoT Anomaly Detection Pipeline
+# Optimized for production deployment with all three generations
+
+FROM python:3.12-slim as base
+
+# System dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python dependencies
+WORKDIR /app
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Development stage
+FROM base as development
+RUN pip install --no-cache-dir -r requirements-dev.txt
+COPY . .
+CMD ["python", "-m", "src.api_gateway"]
+
+# Production build stage
+FROM base as builder
+
+# Copy source code
+COPY src/ ./src/
+COPY pyproject.toml ./
+COPY README.md ./
+
+# Install the package
+RUN pip install --no-cache-dir -e .
+
+# Production stage
+FROM python:3.12-slim as production
+
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# System dependencies (minimal)
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy installed packages from builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy application
+WORKDIR /app
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/pyproject.toml ./
+
+# Create required directories
+RUN mkdir -p saved_models data/raw data/processed logs \
+    && chown -R appuser:appuser /app
+
+# Health check script
+COPY deployment/healthcheck.py ./healthcheck.py
+RUN chmod +x healthcheck.py
+
+# Switch to non-root user
+USER appuser
+
+# Environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PIPELINE_MODE=scalable
+ENV LOG_LEVEL=INFO
+
+# Expose ports
+EXPOSE 8000 8080 9090
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD python healthcheck.py
+
+# Default command (can be overridden)
+CMD ["python", "-m", "src.api_gateway", "--host", "0.0.0.0", "--port", "8000"]
+
+# Labels for metadata
+LABEL maintainer="Terragon Labs <dev@terragonlabs.com>"
+LABEL version="1.3.0"
+LABEL description="IoT Anomaly Detection Pipeline - Generations 1-3 Complete"
+LABEL generation="1-3-complete"
+LABEL pipeline.basic="true"
+LABEL pipeline.robust="true"
+LABEL pipeline.scalable="true"
