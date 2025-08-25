@@ -1,0 +1,12 @@
+{
+  "anomaly_detected": "異常が検出されました",
+  "system_healthy": "システムは正常です",
+  "processing_data": "データを処理中",
+  "training_complete": "トレーニングが正常に完了しました",
+  "error_occurred": "エラーが発生しました",
+  "authentication_failed": "認証に失敗しました",
+  "access_denied": "アクセスが拒否されました",
+  "data_validated": "データ検証が完了しました",
+  "backup_complete": "バックアップが完了しました",
+  "deployment_successful": "デプロイメントが成功しました"
+}

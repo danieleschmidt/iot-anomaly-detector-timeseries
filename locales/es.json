@@ -1,0 +1,12 @@
+{
+  "anomaly_detected": "Anomalía detectada",
+  "system_healthy": "El sistema está saludable",
+  "processing_data": "Procesando datos",
+  "training_complete": "Entrenamiento completado exitosamente",
+  "error_occurred": "Ocurrió un error",
+  "authentication_failed": "Falló la autenticación",
+  "access_denied": "Acceso denegado",
+  "data_validated": "Validación de datos completada",
+  "backup_complete": "Respaldo completado",
+  "deployment_successful": "Despliegue exitoso"
+}

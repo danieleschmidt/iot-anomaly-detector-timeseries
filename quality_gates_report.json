@@ -1,0 +1,770 @@
+{
+  "code_quality": {
+    "total_files": 111,
+    "total_lines": 70764,
+    "python_files": 111,
+    "complexity_issues": [
+      {
+        "file": "/root/repo/src/adaptive_cache.py",
+        "complexity": 61,
+        "functions": 58,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/adaptive_edge_computing_orchestrator.py",
+        "complexity": 102,
+        "functions": 41,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/adaptive_multi_modal_detector.py",
+        "complexity": 54,
+        "functions": 30,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/adaptive_neural_plasticity_networks.py",
+        "complexity": 101,
+        "functions": 38,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/adaptive_real_time_processor.py",
+        "complexity": 36,
+        "functions": 16,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/advanced_autoencoder_cli.py",
+        "complexity": 57,
+        "functions": 9,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/advanced_meta_learning_orchestrator.py",
+        "complexity": 48,
+        "functions": 52,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/advanced_security_framework.py",
+        "complexity": 36,
+        "functions": 26,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/api_gateway.py",
+        "complexity": 26,
+        "functions": 21,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/autonomous_performance_optimization_engine.py",
+        "complexity": 44,
+        "functions": 35,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/autonomous_quality_assurance_system.py",
+        "complexity": 58,
+        "functions": 45,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/autoscaling_manager.py",
+        "complexity": 59,
+        "functions": 46,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/breakthrough_quantum_neuromorphic_fusion.py",
+        "complexity": 22,
+        "functions": 26,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/cache_manager_cli.py",
+        "complexity": 38,
+        "functions": 7,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/caching_strategy.py",
+        "complexity": 24,
+        "functions": 16,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/circuit_breaker.py",
+        "complexity": 38,
+        "functions": 33,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/comprehensive_monitoring.py",
+        "complexity": 68,
+        "functions": 43,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/config.py",
+        "complexity": 34,
+        "functions": 10,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/data_drift_detector.py",
+        "complexity": 54,
+        "functions": 14,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/data_preprocessor.py",
+        "complexity": 56,
+        "functions": 17,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/data_validator.py",
+        "complexity": 86,
+        "functions": 10,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/distributed_anomaly_detection.py",
+        "complexity": 86,
+        "functions": 38,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/drift_monitoring_cli.py",
+        "complexity": 49,
+        "functions": 5,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/edge_anomaly_detector.py",
+        "complexity": 31,
+        "functions": 18,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/explainability_cli.py",
+        "complexity": 45,
+        "functions": 8,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/federated_anomaly_learning.py",
+        "complexity": 77,
+        "functions": 28,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/flexible_autoencoder.py",
+        "complexity": 46,
+        "functions": 17,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/generation_5_adaptive_consciousness.py",
+        "complexity": 80,
+        "functions": 42,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/generation_6_singularity_protocols.py",
+        "complexity": 128,
+        "functions": 56,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/generation_7_cosmic_intelligence.py",
+        "complexity": 148,
+        "functions": 52,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/graceful_degradation.py",
+        "complexity": 47,
+        "functions": 33,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/health_monitoring.py",
+        "complexity": 23,
+        "functions": 11,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/high_performance_optimizer.py",
+        "complexity": 73,
+        "functions": 46,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/intelligent_anomaly_orchestrator.py",
+        "complexity": 69,
+        "functions": 21,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/load_balancer.py",
+        "complexity": 62,
+        "functions": 39,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/logging_config.py",
+        "complexity": 68,
+        "functions": 35,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/model_api_cli.py",
+        "complexity": 22,
+        "functions": 5,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/model_explainability.py",
+        "complexity": 39,
+        "functions": 26,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/model_manager.py",
+        "complexity": 20,
+        "functions": 10,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/model_serving_api.py",
+        "complexity": 19,
+        "functions": 20,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/multi_modal_sensor_fusion.py",
+        "complexity": 55,
+        "functions": 29,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/neural_architectural_search.py",
+        "complexity": 47,
+        "functions": 20,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/neuromorphic_spike_processor.py",
+        "complexity": 81,
+        "functions": 40,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/performance_monitor_cli.py",
+        "complexity": 44,
+        "functions": 7,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/production_deployment.py",
+        "complexity": 65,
+        "functions": 16,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_anomaly_fusion.py",
+        "complexity": 56,
+        "functions": 35,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_anomaly_grover_search.py",
+        "complexity": 56,
+        "functions": 31,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_error_corrected_anomaly_detection.py",
+        "complexity": 48,
+        "functions": 41,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_hybrid_autoencoder.py",
+        "complexity": 26,
+        "functions": 32,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_ml_integration.py",
+        "complexity": 24,
+        "functions": 15,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_performance_optimizer.py",
+        "complexity": 51,
+        "functions": 35,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_pipeline_cli.py",
+        "complexity": 24,
+        "functions": 10,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_scale_optimizer.py",
+        "complexity": 65,
+        "functions": 24,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_synaptic_plasticity.py",
+        "complexity": 50,
+        "functions": 28,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_tft_neuromorphic_fusion.py",
+        "complexity": 121,
+        "functions": 37,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quorum_quantum_autoencoder.py",
+        "complexity": 89,
+        "functions": 39,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/realtime_stream_processor.py",
+        "complexity": 28,
+        "functions": 18,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/resilient_anomaly_pipeline.py",
+        "complexity": 61,
+        "functions": 50,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/resource_pool_manager.py",
+        "complexity": 58,
+        "functions": 45,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/retry_manager.py",
+        "complexity": 46,
+        "functions": 28,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/robust_error_handler.py",
+        "complexity": 53,
+        "functions": 43,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/robust_health_monitoring.py",
+        "complexity": 52,
+        "functions": 28,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/robust_pipeline.py",
+        "complexity": 79,
+        "functions": 14,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/scalable_inference_engine.py",
+        "complexity": 81,
+        "functions": 40,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/scalable_pipeline.py",
+        "complexity": 40,
+        "functions": 11,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/security_hardening.py",
+        "complexity": 85,
+        "functions": 34,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/security_utils.py",
+        "complexity": 50,
+        "functions": 26,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/streaming_cli.py",
+        "complexity": 25,
+        "functions": 10,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/streaming_processor.py",
+        "complexity": 28,
+        "functions": 17,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/temporal_fusion_transformer_anomaly.py",
+        "complexity": 52,
+        "functions": 33,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/training_callbacks.py",
+        "complexity": 21,
+        "functions": 13,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/variational_autoencoder.py",
+        "complexity": 35,
+        "functions": 27,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/visualize.py",
+        "complexity": 41,
+        "functions": 7,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/generation_1_autonomous_core.py",
+        "complexity": 35,
+        "functions": 15,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/real_time_inference_engine.py",
+        "complexity": 40,
+        "functions": 19,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/adaptive_learning_system.py",
+        "complexity": 43,
+        "functions": 29,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/robust_deployment_framework.py",
+        "complexity": 66,
+        "functions": 34,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/enterprise_security_framework.py",
+        "complexity": 57,
+        "functions": 39,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/hyper_scale_orchestrator.py",
+        "complexity": 80,
+        "functions": 54,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_inspired/qaoa_task_optimizer.py",
+        "complexity": 71,
+        "functions": 18,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_inspired/quantum_annealing_planner.py",
+        "complexity": 72,
+        "functions": 16,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_inspired/quantum_optimization_base.py",
+        "complexity": 35,
+        "functions": 15,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_inspired/quantum_utils.py",
+        "complexity": 23,
+        "functions": 16,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/quantum_inspired/task_representation.py",
+        "complexity": 44,
+        "functions": 26,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/repositories/anomaly_repository.py",
+        "complexity": 39,
+        "functions": 23,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/repositories/base_repository.py",
+        "complexity": 46,
+        "functions": 34,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/repositories/configuration_repository.py",
+        "complexity": 39,
+        "functions": 25,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/repositories/metrics_repository.py",
+        "complexity": 35,
+        "functions": 22,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/repositories/model_repository.py",
+        "complexity": 36,
+        "functions": 23,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/repositories/timeseries_repository.py",
+        "complexity": 54,
+        "functions": 24,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/services/anomaly_detection_service.py",
+        "complexity": 28,
+        "functions": 15,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/services/data_ingestion_service.py",
+        "complexity": 51,
+        "functions": 16,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/services/model_service.py",
+        "complexity": 29,
+        "functions": 15,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/services/monitoring_service.py",
+        "complexity": 50,
+        "functions": 35,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/services/notification_service.py",
+        "complexity": 43,
+        "functions": 31,
+        "message": "High cyclomatic complexity detected"
+      },
+      {
+        "file": "/root/repo/src/task_planning/task_scheduler.py",
+        "complexity": 46,
+        "functions": 21,
+        "message": "High cyclomatic complexity detected"
+      }
+    ],
+    "import_issues": [],
+    "security_issues": [
+      {
+        "file": "/root/repo/src/adaptive_cache.py",
+        "pattern": "pickle.loads(",
+        "message": "Unsafe pickle deserialization"
+      },
+      {
+        "file": "/root/repo/src/adaptive_cache.py",
+        "pattern": "password",
+        "message": "Potential hardcoded password reference"
+      },
+      {
+        "file": "/root/repo/src/advanced_security_framework.py",
+        "pattern": "password",
+        "message": "Potential hardcoded password reference"
+      },
+      {
+        "file": "/root/repo/src/advanced_security_framework.py",
+        "pattern": "secret",
+        "message": "Potential hardcoded secret reference"
+      },
+      {
+        "file": "/root/repo/src/advanced_security_framework.py",
+        "pattern": "api_key",
+        "message": "Potential hardcoded API key reference"
+      },
+      {
+        "file": "/root/repo/src/api_gateway.py",
+        "pattern": "password",
+        "message": "Potential hardcoded password reference"
+      },
+      {
+        "file": "/root/repo/src/api_gateway.py",
+        "pattern": "secret",
+        "message": "Potential hardcoded secret reference"
+      },
+      {
+        "file": "/root/repo/src/config.py",
+        "pattern": "password",
+        "message": "Potential hardcoded password reference"
+      },
+      {
+        "file": "/root/repo/src/config.py",
+        "pattern": "secret",
+        "message": "Potential hardcoded secret reference"
+      },
+      {
+        "file": "/root/repo/src/logging_config.py",
+        "pattern": "password",
+        "message": "Potential hardcoded password reference"
+      },
+      {
+        "file": "/root/repo/src/logging_config.py",
+        "pattern": "secret",
+        "message": "Potential hardcoded secret reference"
+      },
+      {
+        "file": "/root/repo/src/logging_config.py",
+        "pattern": "api_key",
+        "message": "Potential hardcoded API key reference"
+      },
+      {
+        "file": "/root/repo/src/production_deployment.py",
+        "pattern": "password",
+        "message": "Potential hardcoded password reference"
+      },
+      {
+        "file": "/root/repo/src/security_hardening.py",
+        "pattern": "password",
+        "message": "Potential hardcoded password reference"
+      },
+      {
+        "file": "/root/repo/src/security_hardening.py",
+        "pattern": "secret",
+        "message": "Potential hardcoded secret reference"
+      },
+      {
+        "file": "/root/repo/src/security_utils.py",
+        "pattern": "eval(",
+        "message": "Use of eval() function detected"
+      },
+      {
+        "file": "/root/repo/src/security_utils.py",
+        "pattern": "exec(",
+        "message": "Use of exec() function detected"
+      },
+      {
+        "file": "/root/repo/src/security_utils.py",
+        "pattern": "pickle.loads(",
+        "message": "Unsafe pickle deserialization"
+      },
+      {
+        "file": "/root/repo/src/security_utils.py",
+        "pattern": "password",
+        "message": "Potential hardcoded password reference"
+      },
+      {
+        "file": "/root/repo/src/security_utils.py",
+        "pattern": "secret",
+        "message": "Potential hardcoded secret reference"
+      },
+      {
+        "file": "/root/repo/src/security_utils.py",
+        "pattern": "api_key",
+        "message": "Potential hardcoded API key reference"
+      },
+      {
+        "file": "/root/repo/src/enterprise_security_framework.py",
+        "pattern": "password",
+        "message": "Potential hardcoded password reference"
+      },
+      {
+        "file": "/root/repo/src/enterprise_security_framework.py",
+        "pattern": "secret",
+        "message": "Potential hardcoded secret reference"
+      },
+      {
+        "file": "/root/repo/src/enterprise_security_framework.py",
+        "pattern": "api_key",
+        "message": "Potential hardcoded API key reference"
+      },
+      {
+        "file": "/root/repo/src/repositories/base_repository.py",
+        "pattern": "pickle.loads(",
+        "message": "Unsafe pickle deserialization"
+      },
+      {
+        "file": "/root/repo/src/services/notification_service.py",
+        "pattern": "api_key",
+        "message": "Potential hardcoded API key reference"
+      }
+    ],
+    "documentation_coverage": 0.8666158536585366,
+    "test_coverage_estimate": 44.14414414414414
+  },
+  "performance": {
+    "file_processing_speed": 17515.057522290357,
+    "memory_efficiency": "unknown",
+    "startup_time": 0.0,
+    "response_times": [
+      0.044345855712890625,
+      0.009775161743164062,
+      0.005245208740234375,
+      0.003337860107421875,
+      0.0035762786865234375,
+      0.0030994415283203125,
+      0.00286102294921875,
+      0.0026226043701171875,
+      0.0026226043701171875,
+      0.0026226043701171875
+    ],
+    "avg_response_time": 0.0080108642578125
+  },
+  "security": {
+    "encryption_implemented": true,
+    "authentication_present": true,
+    "input_validation": true,
+    "security_headers": true,
+    "audit_logging": true,
+    "security_score": 100.0
+  },
+  "reliability": {
+    "error_handling": true,
+    "circuit_breaker": true,
+    "retry_logic": true,
+    "health_checks": true,
+    "graceful_shutdown": true,
+    "reliability_score": 100.0
+  },
+  "scalability": {
+    "async_support": true,
+    "distributed_processing": true,
+    "auto_scaling": true,
+    "load_balancing": true,
+    "caching": true,
+    "scalability_score": 100.0
+  },
+  "overall": {
+    "passed_gates": 4,
+    "total_gates": 5,
+    "pass_rate": 80.0,
+    "recommendation": [
+      "All quality gates passed! System meets enterprise standards."
+    ]
+  }
+}
