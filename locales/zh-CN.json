@@ -1,0 +1,12 @@
+{
+  "anomaly_detected": "检测到异常",
+  "system_healthy": "系统运行正常",
+  "processing_data": "正在处理数据",
+  "training_complete": "训练成功完成",
+  "error_occurred": "发生错误",
+  "authentication_failed": "身份验证失败",
+  "access_denied": "访问被拒绝",
+  "data_validated": "数据验证完成",
+  "backup_complete": "备份完成",
+  "deployment_successful": "部署成功"
+}
