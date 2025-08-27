@@ -1,6 +1,6 @@
-# API Reference
+# Terragon IoT Anomaly Detection API Reference
 
-This document provides comprehensive API documentation for the IoT Anomaly Detector service.
+This document provides comprehensive API documentation for the Terragon IoT Anomaly Detection system, covering all three generations of the autonomous SDLC implementation.
 
 ## Table of Contents
 

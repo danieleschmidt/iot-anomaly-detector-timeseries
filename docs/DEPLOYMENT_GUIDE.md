@@ -1,6 +1,6 @@
-# Deployment Guide
+# Terragon IoT Anomaly Detection - Deployment Guide
 
-This guide provides comprehensive instructions for deploying the IoT Anomaly Detector in various environments.
+This guide provides comprehensive instructions for deploying the Terragon IoT Anomaly Detection system across all three generations of the autonomous SDLC implementation.
 
 ## Table of Contents
 

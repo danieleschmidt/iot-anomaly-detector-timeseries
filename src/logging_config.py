@@ -213,7 +213,10 @@ def setup_logging(
         root_logger.removeHandler(handler)
     
     # Set logging level
-    numeric_level = getattr(logging, level.upper(), logging.INFO)
+    if isinstance(level, int):
+        numeric_level = level
+    else:
+        numeric_level = getattr(logging, level.upper(), logging.INFO)
     root_logger.setLevel(numeric_level)
     
     # Create formatters
