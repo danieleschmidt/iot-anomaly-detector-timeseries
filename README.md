@@ -1,269 +1,162 @@
-# IoT Time Series Anomaly Detector
+# IoT Anomaly Detector — Time Series
 
-This project aims to develop an anomaly detection system for multivariate time series data, simulating readings from IoT sensors. We will use an LSTM-based autoencoder to learn normal operating patterns and identify anomalies based on reconstruction error.
+Real-time anomaly detection for IoT sensor streams. No cloud required, no data science degree needed.
 
-## Project Goals
-- Implement robust preprocessing for multivariate time series data, including normalization and windowing.
-- Design and train an LSTM autoencoder model.
-- Develop a mechanism to calculate reconstruction error and set a threshold for anomaly detection.
-- Visualize normal vs. anomalous data points/sequences.
-- Evaluate the anomaly detection performance (if using a dataset with labeled anomalies, otherwise qualitative).
+Detects point spikes, contextual outliers, and collective pattern shifts in temperature, pressure, and vibration data — using both fast statistical methods and a trained LSTM autoencoder.
 
-## Tech Stack (Planned)
-- Python
-- TensorFlow / Keras or PyTorch
-- Pandas, NumPy
-- Scikit-learn (for preprocessing/scaling)
-- Matplotlib / Seaborn (for visualization)
+---
 
-## Initial File Structure
-iot-anomaly-detector-timeseries/
-├── data/
-│   └── raw/
-│       └── sensor_data.csv # Simulated multivariate sensor data
-│   └── processed/
-├── notebooks/
-│   └── timeseries_eda.ipynb
-├── src/
-│   ├── __init__.py
-│   ├── data_preprocessor.py # Time series specific preprocessing
-│   ├── autoencoder_model.py # LSTM autoencoder definition
-│   ├── train_autoencoder.py # Training script
-│   └── anomaly_detector.py  # Anomaly detection logic & visualization
-├── tests/
-│   ├── __init__.py
-│   └── test_data_preprocessor.py
-├── saved_models/
-├── requirements.txt
-├── .gitignore
-└── README.md
+## What's inside
 
-## How to Contribute (and test Jules)
-This project leverages Jules for building out the anomaly detection pipeline. Please create detailed issues for features and bug fixes.
+| Component | Description |
+|---|---|
+| `TimeSeriesGenerator` | Synthetic IoT sensor data with configurable anomaly injection |
+| `StatisticalDetector` | Z-score, IQR, and moving-average deviation — fast, zero ML |
+| `LSTMDetector` | LSTM autoencoder trained on normal data, flags high reconstruction error |
+| `AnomalyReport` | Structured findings: timestamp, sensor, severity, type, confidence |
 
-## Quickstart
+### Anomaly types
 
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Generate example data:
-   ```bash
-  python -m src.generate_data --num-samples 1000 --num-features 3 \
-      --output-path data/raw/sensor_data.csv \
-      --labels-path data/raw/sensor_labels.csv \
-      --seed 42 \
-      --anomaly-start 200 \
-      --anomaly-length 20 \
-      --anomaly-magnitude 3.0
-   ```
-   The command-line options let you control the number of samples, how many
-   sensor streams to simulate, optionally generate a labels file with the
-   anomaly locations, set a random seed for reproducibility, adjust the
-   inserted anomaly window, and specify where the CSV is written.
-3. Train the autoencoder:
-   ```bash
-   python -m src.train_autoencoder \
-       --epochs 5 \
-       --window-size 30 \
-       --step 1 \
-       --latent-dim 16 \
-       --scaler standard \
-       --model-path saved_models/autoencoder.h5 \
-       --scaler-path saved_models/scaler.pkl
-   ```
-   The `--model-path` option controls where the trained model is written.
-4. Detect anomalies:
-   ```python
-  from src.anomaly_detector import AnomalyDetector
-  detector = AnomalyDetector('saved_models/autoencoder.h5', 'saved_models/scaler.pkl')
-  anomalies = detector.predict('data/raw/sensor_data.csv')
-   print(anomalies)
-   ```
-   You can also invoke anomaly detection from the command line:
-   ```bash
-  python -m src.anomaly_detector --model-path saved_models/autoencoder.h5 \
-      --scaler-path saved_models/scaler.pkl \
-      --csv-path data/raw/sensor_data.csv \
-      --step 1 \
-      --threshold 0.5 \
-      --output predictions.csv
-  ```
-  Or derive the threshold from a reconstruction error quantile instead:
-  ```bash
-  python -m src.anomaly_detector --model-path saved_models/autoencoder.h5 \
-      --scaler-path saved_models/scaler.pkl \
-      --csv-path data/raw/sensor_data.csv \
-      --step 1 \
-      --quantile 0.95 \
-      --output predictions.csv
-  ```
-  This writes a CSV file containing ``1`` for anomalous windows and ``0`` otherwise.
-  Supply either ``--threshold`` for a manual value or ``--quantile`` to derive
-  the threshold from the reconstruction error. These options are mutually
- exclusive and ``--quantile`` must be between 0 and 1 (exclusive). Invalid
- quantile values are rejected before the model is loaded.
- 
-  **Performance Optimization for Large Datasets:**
-  ```bash
-  python -m src.anomaly_detector --model-path saved_models/autoencoder.h5 \
-      --csv-path large_sensor_data.csv \
-      --use-batched \
-      --batch-size 512 \
-      --quantile 0.95 \
-      --output large_predictions.csv
-  ```
-  For datasets with >1000 windows, batched processing is automatically enabled.
-  Use ``--batch-size`` to control memory usage and ``--use-batched`` to force
-  batching on smaller datasets for consistent behavior.
-5. Evaluate reconstruction error statistics:
-   ```bash
-   python -m src.evaluate_model \
-       --window-size 30 \
-       --step 1 \
-       --threshold-factor 3 \
-       --model-path saved_models/autoencoder.h5 \
-       --scaler-path saved_models/scaler.pkl \
-       --labels-path data/raw/sensor_labels.csv \
-       --train-epochs 1 \
-       --output eval.json
-   ```
-   Alternatively derive the threshold from a reconstruction error quantile:
-   ```bash
-   python -m src.evaluate_model \
-       --window-size 30 \
-       --step 1 \
-       --quantile 0.95 \
-       --model-path saved_models/autoencoder.h5 \
-       --scaler-path saved_models/scaler.pkl \
-       --labels-path data/raw/sensor_labels.csv \
-       --train-epochs 1 \
-       --output eval.json
-   ```
-   The ``--threshold-factor`` and ``--quantile`` options are mutually
-   exclusive. ``--quantile`` must be between 0 and 1 (exclusive).
-   If the model file does not exist, the script performs a training run before
-   evaluating. Providing ``--labels-path`` enables computing precision, recall
-   and F1 score. The number of epochs can be customized with ``--train-epochs``.
-6. Visualize sequences and anomaly flags:
-   ```bash
-   python -m src.visualize --csv-path data/raw/sensor_data.csv \
-       --anomalies predictions.csv --output plot.png
-   ```
-   This generates ``plot.png`` with red regions indicating detected anomalies.
+- **Point** — sudden spike or dip far outside normal range (sensor failure, physical event)
+- **Contextual** — value that's globally plausible but wrong for the current operating state (e.g., temperature spiking during a cool cycle)
+- **Collective** — a subsequence that's collectively anomalous (gradual drift, pattern shift)
 
-## Data Validation
+---
 
-The project includes comprehensive data validation to ensure data quality and prevent pipeline failures. The data validator checks for schema compliance, data quality issues, and time series properties.
-
-### Basic Data Validation
-
-Validate a CSV file with default settings:
+## Quick start
 
 ```bash
-python -m src.data_validator data/raw/sensor_data.csv
+# Install dependencies (conda recommended)
+~/anaconda3/bin/pip install -e .
+
+# Run the demo: 500 timesteps, 10 injected anomalies, compare both detectors
+~/anaconda3/bin/python3 demo.py
+
+# Run tests
+~/anaconda3/bin/python3 -m pytest tests/ -v
 ```
 
-### Advanced Validation Options
+---
 
-Set validation strictness level:
-```bash
-# Strict validation (strict error checking)
-python -m src.data_validator data/raw/sensor_data.csv --validation-level strict
+## Usage
 
-# Permissive validation (more lenient)
-python -m src.data_validator data/raw/sensor_data.csv --validation-level permissive
-```
-
-Validate with expected columns:
-```bash
-python -m src.data_validator data/raw/sensor_data.csv \
-    --expected-columns temperature,humidity,pressure
-```
-
-Enable auto-fix for common issues:
-```bash
-python -m src.data_validator data/raw/sensor_data.csv \
-    --auto-fix \
-    --output data/processed/cleaned_sensor_data.csv
-```
-
-Time series validation with timestamp column:
-```bash
-python -m src.data_validator data/raw/sensor_data.csv \
-    --time-column timestamp \
-    --report validation_report.md
-```
-
-Generate comprehensive reports:
-```bash
-python -m src.data_validator data/raw/sensor_data.csv \
-    --report validation_report.md \
-    --json-summary validation_summary.json \
-    --verbose
-```
-
-### Validation Features
-
-The data validator checks for:
-
-- **File Format**: File existence, readability, and format compliance
-- **Schema Validation**: Column presence, data types, and structure
-- **Data Quality**: Missing values, duplicates, constant columns, and outliers
-- **Time Series Properties**: Sequence length, time monotonicity, and intervals
-- **Auto-fix Capabilities**: Automatic correction of common data issues
-
-### Integration with Data Preprocessing
-
-Data validation is automatically integrated into the data preprocessing pipeline. You can control validation behavior:
+### Generate synthetic sensor data
 
 ```python
-from src.data_preprocessor import DataPreprocessor
-from src.data_validator import ValidationLevel
+from iot_anomaly_detector import TimeSeriesGenerator
 
-# Enable validation with moderate strictness (default)
-preprocessor = DataPreprocessor(enable_validation=True, validation_level=ValidationLevel.MODERATE)
+gen = TimeSeriesGenerator(seed=42)
+readings, injected_anomalies = gen.generate(n_steps=500, n_anomalies=10)
 
-# Disable validation for performance-critical applications
-preprocessor = DataPreprocessor(enable_validation=False)
-
-# Enable auto-fix during preprocessing
-scaled_data = preprocessor.fit_transform(df, validate=True, auto_fix=True)
+# Convert to numpy for detector input
+data, sensor_names = gen.to_numpy(readings)
+# data.shape → (500, 3)   sensors: temperature, pressure, vibration
 ```
 
-## Running Integration Tests
+### Statistical detection (no training required)
 
-Integration tests verify the full data generation, training, and detection pipeline. They are marked with the `integration` marker. Execute them separately with:
+```python
+from iot_anomaly_detector import StatisticalDetector
 
-```bash
-pytest -m integration
+det = StatisticalDetector(window=50, zscore_threshold=3.0)
+report = det.detect(data, sensor_names)
+
+print(report.summary())
+# AnomalyReport: 12 findings
+#   Critical: 2  High: 5
+#   pressure: 4 anomalies
+#   temperature: 5 anomalies
+#   vibration: 3 anomalies
 ```
 
-You can also run them via Make:
+### LSTM autoencoder detection
 
-```bash
-make integration
+```python
+from iot_anomaly_detector import LSTMDetector
+
+# Train on normal data (first half of stream, before anomalies start)
+det = LSTMDetector(window=20, hidden_size=64, epochs=30)
+det.fit(data[:250], verbose=True)
+
+# Detect on full stream
+report = det.detect(data, sensor_names)
 ```
 
+### Work with findings
 
-## Development Setup
+```python
+from iot_anomaly_detector import AnomalyReport
 
-Install all runtime and development dependencies using the helper script:
+# Merge reports from multiple detectors
+combined = stat_report.merge(lstm_report)
 
-```bash
-./scripts/setup.sh
-# or via Make
-make setup
+# Inspect findings
+for finding in combined.findings:
+    print(f"t={finding.timestep:3d} | {finding.sensor:<12s} | "
+          f"{finding.severity.value:<8s} | conf={finding.confidence:.2f} | "
+          f"{finding.description}")
+
+# Group by sensor
+for sensor, findings in combined.by_sensor().items():
+    print(f"{sensor}: {len(findings)} anomalies")
 ```
 
-Run the full test suite including style and security scans via:
+---
 
-```bash
-./scripts/test.sh
-# or simply
-make test
+## Architecture
+
+```
+TimeSeriesGenerator
+    └─ generate() → List[SensorReading], List[InjectedAnomaly]
+    └─ to_numpy()  → ndarray(n_steps, n_sensors)
+
+StatisticalDetector
+    └─ detect(data, sensor_names) → AnomalyReport
+        ├─ z-score (rolling window)
+        ├─ IQR fences (Tukey)
+        └─ moving-average deviation
+
+LSTMDetector
+    ├─ fit(normal_data)          ← train autoencoder
+    └─ detect(data, sensor_names) → AnomalyReport
+        └─ per-timestep reconstruction error > threshold → anomaly
+
+AnomalyReport
+    ├─ findings: List[AnomalyFinding]
+    ├─ merge(other) → AnomalyReport
+    ├─ detected_timesteps() → List[int]
+    └─ summary() → str
 ```
 
-## Continuous Integration
+---
 
-Every push and pull request triggers our GitHub Actions workflow which installs dependencies, lints, runs security scans, and executes the test suite.
+## Design decisions
+
+**Why two detectors?**
+
+- Statistical methods are fast, interpretable, and work immediately with no training data. Good for obvious spikes.
+- LSTM autoencoder catches subtle pattern deviations that rule-based methods miss. Requires a window of normal data for calibration.
+- Combined, they cover more anomaly types with better recall.
+
+**Why no sklearn?**
+
+The statistical detector is implemented directly with numpy/scipy — no sklearn needed. Fewer dependencies, easier deployment to edge devices.
+
+**Why PyTorch for LSTM?**
+
+PyTorch's dynamic graph is more flexible for sequence models and runs well both on CPU (edge) and GPU (cloud).
+
+---
+
+## Requirements
+
+- Python 3.8+
+- numpy ≥ 1.21
+- scipy ≥ 1.7
+- torch ≥ 1.12
+
+---
+
+## License
+
+MIT
